@@ -5,4 +5,4 @@ __email__ = "jake.nunemaker@nrel.gov"
 __status__ = "Development"
 
 
-from .regression import RegressionData
+from .regression import Regression

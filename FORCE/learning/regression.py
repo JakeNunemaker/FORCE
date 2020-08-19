@@ -7,28 +7,36 @@ __status__ = "Development"
 
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
 
 from FORCE.library import ex_rates
 
 
-class RegressionData:
+class Regression:
     def __init__(
         self,
         projects,
+        y_var,
         filters={},
         regression_variables=[],
         status=["Installed"],
         drop_countries=[],
         drop_categorical=[],
         aggregate_countries={},
+        log_vars=[],
+        add_vars={},
+        **kwargs,
     ):
         """
-        Creates an instance of `RegressionData`.
+        Creates an instance of `Regression`.
 
         Parameters
         ----------
         projects : pd.DataFrame
             Project dataset.
+        y_var : str
+            Y variable for the linear regression model. Should either match an
+            input column or a calculated log column, 'log {column}'.
         filters : dict
             Numeric filters on columns.
             Format: 'col': (min, max (optional))
@@ -48,27 +56,36 @@ class RegressionData:
             Countries to aggregate to larger regions.
             Format: 'country': 'new region'
             Default: {}
+        log_vars : list
+            Columns to take log of.
+        add_vars : dict
+            Additional explanatory data.
+            Format: {'key': {2005: val1, 2006: val2, ...}}
         """
 
-        self.regression_variables = list(
-            set(
-                [
-                    "COD",
-                    "Capacity MW (Max)",
-                    "ProjectCost Currency",
-                    "ProjectCost Mill",
-                    *regression_variables,
-                ]
-            )
-        )
+        self.regression_variables = regression_variables
 
+        self._y = y_var
         self._status = status
         self._drop_country = drop_countries
         self._drop_categorical = drop_categorical
         self._aggr = aggregate_countries
+        self._log = log_vars
+        self._add = add_vars
 
-        self._data = self.clean_data(projects, self.regression_variables)
+        self._data = self.clean_data(
+            projects,
+            [
+                "COD",
+                "Capacity MW (Max)",
+                "ProjectCost Mill",
+                "ProjectCost Currency",
+                *self.regression_variables,
+            ],
+        )
         self._processed = self.filter_and_process_data(self._data, filters)
+
+        self.multi_linear_regression(**kwargs)
 
     @property
     def raw_data(self):
@@ -92,7 +109,8 @@ class RegressionData:
 
         data = self.filter_data(data, filters)
         data = self.append_cumulative(data)
-        data = self.process_data(data)
+        data = self.process_categorical_data(data)
+        data = self.preprocess_data(data)
         return data
 
     def filter_data(self, data, filters):
@@ -145,16 +163,15 @@ class RegressionData:
         data : pd.DataFrame
         """
 
-        ret = data.copy()  # .reset_index(drop=True) #.sort_values("COD").
-
-        # cumulative = dict(zip(ret["COD"], ret["Capacity MW (Max)"].cumsum(axis=0)))
+        ret = data.copy().sort_values("COD")
         yearly = ret.groupby(["COD"]).sum()["Capacity MW (Max)"]
         cumulative = dict(zip(yearly.index, yearly.cumsum(axis=0)))
-        ret["Cumulative Capacity"] = ret["COD"].apply(lambda x: cumulative[x])
+        ret["Cumulative Capacity"] = ret["COD"].apply(lambda y: cumulative[y])
+        self.regression_variables.append("Cumulative Capacity")
 
         return ret
 
-    def process_data(self, data):
+    def process_categorical_data(self, data):
         """
         Appends categorical columns to `data`.
 
@@ -175,8 +192,31 @@ class RegressionData:
 
         return data
 
-    @classmethod
-    def clean_data(cls, data, required_columns):
+    def preprocess_data(self, data):
+        """
+        Preprocess data for regression. Takes log of any columns in `self._log`,
+        and appends any additional data in `self._add`.
+
+        Parameters
+        ----------
+        data : pd.DataFrame
+        """
+
+        for item in self._log:
+            log_item = f"log {item}"
+            data[log_item] = data[item].apply(np.log)
+
+            if item in self.regression_variables:
+                self.regression_variables.remove(item)
+                self.regression_variables.append(log_item)
+
+        for key, val in self._add.items():
+            projects[key] = projects["COD"].apply(lambda y: val[y])
+            self.regression_variables.append(key)
+
+        return data
+
+    def clean_data(self, data, required_columns):
         """
         Removes entries that don't have data in `required_columns`, converts
         currencies to USD and calculates CAPEX per kW.
@@ -189,7 +229,7 @@ class RegressionData:
 
         data = data.loc[~data[required_columns].isnull().any(axis=1)].copy()
         data["CAPEX_conv"] = data.apply(
-            cls.conv_currency,
+            self.conv_currency,
             axis=1,
             id_col="ProjectCost Mill",
             val_col="ProjectCost Currency",
@@ -199,6 +239,49 @@ class RegressionData:
         )
 
         return data
+
+    def multi_linear_regression(self, **kwargs):
+        """
+        Conduct multivariate linear regression controlling for desired variables.
+        """
+
+        data = self.processed_data.copy()
+
+        X = data[self.regression_variables]
+        Y = data[self._y]
+        X2 = sm.add_constant(X)
+
+        if len(self.regression_variables) > 1:
+            self.vif = self.calculate_vif(X2)
+
+        sm_regressor = sm.OLS(Y, X2).fit()
+        print(sm_regressor.summary())
+
+        self.summary = sm_regressor.summary()
+        self.r2 = sm_regressor.rsquared
+        self.params = sm_regressor.params
+        self.params_dict = dict(self.params)
+        self.bse_dict = dict(sm_regressor.bse)
+
+    def calculate_vif(self, df):
+        """
+        Calculate variance inflation factor for all columns in `df`.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+        """
+
+        vif = []
+        for name, data in df.iteritems():
+            r_sq_i = sm.OLS(data, df.drop(name, axis=1)).fit().rsquared
+            vif.append(1.0 / (1.0 - r_sq_i))
+
+        print(f"Variance Inflation Factor:")
+        print(pd.DataFrame(list(zip(df.columns, vif))))
+        print("\n")
+
+        return vif
 
     @staticmethod
     def _filter_range(data, col, min, max=np.inf):
