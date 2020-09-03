@@ -94,8 +94,22 @@ class Regression:
 
     @property
     def processed_data(self):
-        """Returns data after column filters are applied, a"""
+        """Returns data after column filters are applied."""
         return self._processed
+
+    @property
+    def installed_capacity(self):
+        """Returns total installed capacity of the processed data."""
+        return self._processed["Cumulative Capacity"].max()
+
+    @property
+    def current_capex(self):
+        """Returns mean CAPEX per kW value for the most recent year."""
+
+        year = self._processed["COD"].max()
+        return self._processed.loc[self._processed["COD"] == year][
+            "CAPEX_per_kw"
+        ].mean()
 
     def filter_and_process_data(self, data, filters):
         """
@@ -255,13 +269,17 @@ class Regression:
             self.vif = self.calculate_vif(X2)
 
         sm_regressor = sm.OLS(Y, X2).fit()
-        print(sm_regressor.summary())
 
         self.summary = sm_regressor.summary()
         self.r2 = sm_regressor.rsquared
         self.params = sm_regressor.params
         self.params_dict = dict(self.params)
         self.bse_dict = dict(sm_regressor.bse)
+
+        _key = [i for i in self.params_dict.keys() if "Cumulative" in i][0]
+        self.cumulative_capacity_fit = self.params_dict[_key]
+        self.cumulative_capacity_bse = self.bse_dict[_key]
+        self.learning_rate = 1 - 2 ** self.cumulative_capacity_fit
 
     def calculate_vif(self, df):
         """
@@ -276,10 +294,6 @@ class Regression:
         for name, data in df.iteritems():
             r_sq_i = sm.OLS(data, df.drop(name, axis=1)).fit().rsquared
             vif.append(1.0 / (1.0 - r_sq_i))
-
-        print(f"Variance Inflation Factor:")
-        print(pd.DataFrame(list(zip(df.columns, vif))))
-        print("\n")
 
         return vif
 
@@ -331,7 +345,7 @@ class Regression:
         ex_rate = ex_rates[currency][year]
 
         if output != "USD":
-            return NotImplemented(
+            return NotImplementedError(
                 "Currency conversion other than 'USD' not supported yet."
             )
 
