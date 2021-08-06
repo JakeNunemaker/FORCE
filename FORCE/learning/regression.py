@@ -19,7 +19,7 @@ class Regression:
         y_var,
         filters={},
         regression_variables=[],
-        status=["Installed"],
+        status=["Fully Commissioned"],
         drop_countries=[],
         drop_categorical=[],
         aggregate_countries={},
@@ -76,10 +76,10 @@ class Regression:
         self._data = self.clean_data(
             projects,
             [
-                "COD",
+                "Full Commissioning",
                 "Capacity MW (Max)",
-                "ProjectCost Mill",
-                "ProjectCost Currency",
+                "Project Cost Mill",
+                "Project Cost Currency",
                 *self.regression_variables,
             ],
         )
@@ -106,8 +106,8 @@ class Regression:
     def current_capex(self):
         """Returns mean CAPEX per kW value for the most recent year."""
 
-        year = self._processed["COD"].max()
-        return self._processed.loc[self._processed["COD"] == year][
+        year = self._processed["Full Commissioning"].max()
+        return self._processed.loc[self._processed["Full Commissioning"] == year][
             "CAPEX_per_kw"
         ].mean()
 
@@ -177,10 +177,10 @@ class Regression:
         data : pd.DataFrame
         """
 
-        ret = data.copy().sort_values("COD")
-        yearly = ret.groupby(["COD"]).sum()["Capacity MW (Max)"]
+        ret = data.copy().sort_values("Full Commissioning")
+        yearly = ret.groupby(["Full Commissioning"]).sum()["Capacity MW (Max)"]
         cumulative = dict(zip(yearly.index, yearly.cumsum(axis=0)))
-        ret["Cumulative Capacity"] = ret["COD"].apply(lambda y: cumulative[y])
+        ret["Cumulative Capacity"] = ret["Full Commissioning"].apply(lambda y: cumulative[y])
         self.regression_variables.append("Cumulative Capacity")
 
         return ret
@@ -225,7 +225,7 @@ class Regression:
                 self.regression_variables.append(log_item)
 
         for key, val in self._add.items():
-            projects[key] = projects["COD"].apply(lambda y: val[y])
+            projects[key] = projects["Full Commissioning"].apply(lambda y: val[y])
             self.regression_variables.append(key)
 
         return data
@@ -242,16 +242,16 @@ class Regression:
         """
 
         data = data.loc[~data[required_columns].isnull().any(axis=1)].copy()
+        data["Full Commissioning"] = data["Full Commissioning"].apply(lambda x: int(x.split('-')[-1]))
         data["CAPEX_conv"] = data.apply(
             self.conv_currency,
             axis=1,
-            id_col="ProjectCost Mill",
-            val_col="ProjectCost Currency",
+            id_col="Project Cost Currency",
+            val_col="Project Cost Mill",
         )
         data["CAPEX_per_kw"] = (data["CAPEX_conv"] * 1e6) / (
             data["Capacity MW (Max)"] * 1e3
         )
-
         return data
 
     def multi_linear_regression(self, **kwargs):
@@ -260,7 +260,6 @@ class Regression:
         """
 
         data = self.processed_data.copy()
-
         X = data[self.regression_variables]
         Y = data[self._y]
         X2 = sm.add_constant(X)
@@ -332,7 +331,7 @@ class Regression:
 
         year = pd.to_datetime(row["Financial Close"]).year
         if np.isnan(year):
-            year = row["COD"] - 2
+            year = row["Full Commissioning"] - 2
 
         currency = row[id_col]
 
