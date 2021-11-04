@@ -1,0 +1,9 @@
+ac_resistance: 0.128    # PLACEHOLDER
+capacitance: 163        # PLACEHOLDER
+conductor_size: 300     # PLACEHOLDER
+cost_per_km: 500000     # PLACEHOLDER
+current_capacity: 600   # PLACEHOLDER
+inductance: 0.443       # PLACEHOLDER
+linear_density: 40      # PLACEHOLDER
+name: XLPE_132kV_1
+rated_voltage: 132

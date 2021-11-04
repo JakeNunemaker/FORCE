@@ -1,0 +1,9 @@
+ac_resistance: 0.03     # PLACEHOLDER
+capacitance: 300        # PLACEHOLDER
+conductor_size: 1000    # PLACEHOLDER
+cost_per_km: 1300000    # PLACEHOLDER
+current_capacity: 2000  # PLACEHOLDER
+inductance: 0.35        # PLACEHOLDER
+linear_density: 90      # PLACEHOLDER
+name: XLPE_400kV_HVDC
+rated_voltage: 400
