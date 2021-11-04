@@ -11,7 +11,15 @@ import matplotlib.pyplot as plt
 
 
 def plot_learning_forecast(
-    installed, capex, fit, forecast, bse=None, axes=None, perc_change=False, **kwargs
+    installed,
+    capex,
+    fit,
+    forecast,
+    bse=None,
+    axes=None,
+    perc_change=False,
+    data_file=None,
+    **kwargs,
 ):
     """
     Plots forecasted CAPEX/kW based on the installed capacity, current capex,
@@ -31,6 +39,8 @@ def plot_learning_forecast(
         Standard error of the fit.
         If None, error will not be plotted.
     axes : matplotlib.Axis
+    perc_change : bool
+    data_file :
     """
 
     if axes is None:
@@ -55,11 +65,12 @@ def plot_learning_forecast(
     if perc_change is False:
         y0 = calc_curve(x, C0_0, b0)
         y0_per_year = calc_curve(upcoming, C0_0, b0)
-        _out_col = 'Average global CapEx, $/KW'
+        _out_col = "Average global CapEx, $/KW"
+
     else:
         y0 = calc_curve(x, C0_0, b0, capex_0=capex)
         y0_per_year = calc_curve(upcoming, C0_0, b0, capex_0=capex)
-        _out_col = 'Percent change from initial CapEx'
+        _out_col = "Percent change from initial CapEx"
 
     ax1.plot(x, y0, "k-")
     ax1.set_xlabel("Cumulative Capacity")
@@ -87,12 +98,11 @@ def plot_learning_forecast(
     ax2.set_xticklabels(forecast.keys(), rotation=45, fontsize=8)
     ax2.set_ylabel("Projected COD")
 
-    _out = pd.DataFrame({
-        'Year': forecast.keys(),
-        _out_col: y0_per_year
-    })
+    if data_file:
+        _out = pd.DataFrame({"Year": forecast.keys(), _out_col: y0_per_year})
 
-    _out.to_csv('Projected_capex.csv')
+        _out.set_index("Year").to_csv(data_file)
+
     return ax1, ax2
 
 
