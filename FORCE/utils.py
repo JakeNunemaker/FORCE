@@ -95,6 +95,7 @@ def plot_learning_forecast(
     _out.to_csv('Projected_capex.csv')
     return ax1, ax2
 
+
 def calc_curve(x, C0, b, capex_0=None):
     """Fit the learning curve to a prescribed range of years"""
     if capex_0:

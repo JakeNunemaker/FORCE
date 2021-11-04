@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 
-from FORCE.library import ex_rates
+from FORCE import ex_rates
 
 
 class Regression:
