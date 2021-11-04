@@ -26,24 +26,8 @@ setup(
     install_requires=[
         "numpy",
         "pandas",
-        "scipy",
         "matplotlib",
-        "pandas",
         "pyyaml",
+        "orbit-nrel"
     ],
-    extras_require={
-        "dev": [
-            "pre-commit",
-            "pylint",
-            "flake8",
-            "black",
-            "isort",
-            "pytest",
-            "pytest-cov",
-            "sphinx",
-            "sphinx-rtd-theme",
-        ]
-    },
-    test_suite="pytest",
-    tests_require=["pytest", "pytest-cov"],
 )
