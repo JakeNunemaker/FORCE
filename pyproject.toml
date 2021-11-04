@@ -2,7 +2,7 @@
 line-length = 79
 target-version = ['py37']
 include = '\.pyi?$'
-exclude = '''
+exclude = 'analysis/'
 /(
     \.git
   | \.hg

@@ -109,6 +109,3 @@ ENV/
 
 # Pycharm
 .idea/
-
-# Other
-Analysis/

@@ -25,7 +25,7 @@ repos:
     -   id: check-merge-conflict
     -   id: check-symlinks
     -   id: flake8
-        exclude: ^tests/
+        exclude: ^analysis/
     -   id: mixed-line-ending
     -   id: pretty-format-json
         args: [--autofix]
@@ -34,4 +34,4 @@ repos:
     rev: v2.1.1
     hooks:
     -   id: pylint
-        exclude: ^tests/
+        exclude: ^analysis/
