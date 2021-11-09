@@ -135,8 +135,6 @@ def run_orbit_configs(sites, b0, upcoming, years):
 
             config = load_config(os.path.join(DIR, "orbit_configs", "fixed", c))
             weather_file = config.pop("weather", None)
-            turbine = config.get("turbine")
-            turbine_rating = float(turbine.split("MW")[0])  # TODO: Revise. Is there a numeric turbine rating property in ProjectManager?
 
             if weather_file is not None:
                 weather = pd.read_csv(os.path.join(DIR, "library", "weather", weather_file)).set_index("datetime")
@@ -156,10 +154,10 @@ def run_orbit_configs(sites, b0, upcoming, years):
             site_data.loc[yr, "Regression"] = c * upcoming[yr] ** b0
 
         site_data["OpEx"] = opex.values()
-        aep = {k: v * turbine_rating * 8760 for k, v in ncf.items()}  # MWh
+        aep = {k: v * 8760 for k, v in ncf.items()}  # MWh
         site_data["AEP"] = aep.values()
         site_data["FCR"] = fcr.values()
-        site_data["LCOE"] = (site_data["FCR"] * site_data["Regression"] / 1000 + site_data["OpEx"]) / site_data["AEP"]
+        site_data["LCOE"] = 1000 * (site_data["FCR"] * site_data["Regression"] + site_data["OpEx"]) / site_data["AEP"]
         # TODO: check units for above                     $/MW                        $/MW/year                MWh
         site_data["Site"] = name
 
