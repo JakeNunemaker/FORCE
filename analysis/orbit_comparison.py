@@ -49,6 +49,13 @@ TO_AGGREGATE = {
     'China': 'China',
 }
 TO_DROP = []
+PREDICTORS = [
+            'Country Name',
+            'Water Depth Max (m)',
+            'Turbine MW (Max)',
+            'Capacity MW (Max)',
+            'Distance From Shore Auto (km)'
+            ]
 
 
 ## ORBIT Sites + Configs
@@ -68,7 +75,7 @@ ORBIT_SITES = {
 
 
 ### Functions
-def run_regression(projects, filters, to_aggregate, to_drop):
+def run_regression(projects, filters, to_aggregate, to_drop, predictors):
     """
     Run FORCE Regression with given settings.
 
@@ -85,13 +92,7 @@ def run_regression(projects, filters, to_aggregate, to_drop):
         projects,
         y_var="log CAPEX_per_kw",
         filters=filters,
-        regression_variables=[
-            'Country Name',
-            'Water Depth Max (m)',
-            'Turbine MW (Max)', 
-            'Capacity MW (Max)',
-            'Distance From Shore Auto (km)'
-            ],
+        regression_variables=predictors,
         aggregate_countries=to_aggregate,
         drop_categorical=["United Kingdom"],
         drop_country=to_drop,
@@ -136,7 +137,7 @@ def stats_check(regression):
     # Plot residuals
     fig = plt.figure(figsize=(12, 9))
     ax = fig.add_subplot(111)
-    ax.scatter(regression.fittedvalues, regression.residuals, 'k')
+    ax.scatter(regression.fittedvalues, regression.residuals)
     ax.set_xlabel('Fitted values (log of CapEx)')
     ax.set_ylabel('Residuals')
 
@@ -220,7 +221,7 @@ if __name__ == "__main__":
     years, linear_forecast = linearize_forecast(FORECAST)
 
     # Regression
-    regression = run_regression(PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP)
+    regression = run_regression(PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PREDICTORS)
     stats_check(regression)
     b0 = regression.cumulative_capacity_fit
     upcoming_capacity = {
