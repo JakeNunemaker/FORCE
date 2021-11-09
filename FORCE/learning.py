@@ -274,6 +274,8 @@ class Regression:
         self.params = sm_regressor.params
         self.params_dict = dict(self.params)
         self.bse_dict = dict(sm_regressor.bse)
+        self.residuals = sm_regressor.resid
+        self.fittedvalues = sm_regressor.fittedvalues
 
         _key = [i for i in self.params_dict.keys() if "Cumulative" in i][0]
         self.cumulative_capacity_fit = self.params_dict[_key]
