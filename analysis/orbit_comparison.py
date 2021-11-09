@@ -93,7 +93,7 @@ def run_regression(projects, filters, to_aggregate, to_drop):
         aggregate_countries=to_aggregate,
         drop_categorical=["United Kingdom"],
         drop_country=to_drop,
-        log_vars=['Cumulative Capacity', 'CAPEX_per_kw']
+        log_vars=['Cumulative Capacity', 'CAPEX_per_kw'],
     )
 
     return regression
@@ -158,7 +158,6 @@ def run_orbit_configs(sites, b0, upcoming, years):
         site_data["AEP"] = aep.values()
         site_data["FCR"] = fcr.values()
         site_data["LCOE"] = 1000 * (site_data["FCR"] * site_data["Regression"] + site_data["OpEx"]) / site_data["AEP"]
-        # TODO: check units for above                     $/MW                        $/MW/year                MWh
         site_data["Site"] = name
 
         orbit_outputs.append(site_data)

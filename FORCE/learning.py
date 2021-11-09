@@ -25,6 +25,7 @@ class Regression:
         aggregate_countries={},
         log_vars=[],
         add_vars={},
+        constant=True,
         **kwargs,
     ):
         """
@@ -61,6 +62,8 @@ class Regression:
         add_vars : dict
             Additional explanatory data.
             Format: {'key': {2005: val1, 2006: val2, ...}}
+        constant : Boolean
+            Select whether to include a constant (=True) or not (=False) in regression
         """
 
         self.regression_variables = regression_variables
@@ -72,6 +75,7 @@ class Regression:
         self._aggr = aggregate_countries
         self._log = log_vars
         self._add = add_vars
+        self._constant = constant
 
         self._data = self.clean_data(
             projects,
@@ -267,7 +271,10 @@ class Regression:
         if len(self.regression_variables) > 1:
             self.vif = self.calculate_vif(X2)
 
-        sm_regressor = sm.OLS(Y, X2).fit()
+        if self._constant is True:
+            sm_regressor = sm.OLS(Y, X2).fit()
+        else:
+            sm_regressor = sm.OLS(Y,X).fit()
 
         self.summary = sm_regressor.summary()
         self.r2 = sm_regressor.rsquared
