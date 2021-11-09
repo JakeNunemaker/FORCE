@@ -30,6 +30,7 @@ setup(
         "matplotlib",
         "pandas",
         "pyyaml",
+        "xlsxwriter"
     ],
     extras_require={
         "dev": [

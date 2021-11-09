@@ -7,6 +7,8 @@ __email__ = "jake.nunemaker@nrel.gov"
 import os
 import numpy as np
 import pandas as pd
+import xlsxwriter
+import matplotlib.pyplot as plt
 from ORBIT import ProjectManager, load_config
 from ORBIT.core.library import initialize_library
 from FORCE.learning import Regression
@@ -98,6 +100,50 @@ def run_regression(projects, filters, to_aggregate, to_drop):
 
     return regression
 
+def stats_check(regression):
+    summary_stats = {'R2': regression.r2,
+                     'Adjusted R2': regression.r2_adj,
+                     'Learning rate': regression.learning_rate,
+                     }
+    predictor_stats = zip(regression.pvalues.keys(),
+                          regression.pvalues.values,
+                          regression.vif)
+
+    # Write stats results to Excel
+    xlsfile = "results/statistics/stats_output.xlsx"
+    workbook = xlsxwriter.Workbook(xlsfile)
+    worksheet = workbook.add_worksheet()
+    row = 0
+    col = 0
+
+    # Write all data to workbook.  Start with scalars then per-predictor values
+    for k, v in summary_stats.items():
+        worksheet.write(row, col, k)
+        worksheet.write(row, col+1, v)
+        row+=1
+    row+=1
+    worksheet.write(row, col, 'Predictor variable')
+    worksheet.write(row, col+1, 'P-value')
+    worksheet.write(row, col+2, 'VIF')
+    row+=1
+    for var, p, v in predictor_stats:
+        worksheet.write(row, col, var)
+        worksheet.write(row, col+1, p)
+        worksheet.write(row, col+2, v)
+        row+=1
+    workbook.close()
+
+    # Plot residuals
+    fig = plt.figure(figsize=(12, 9))
+    ax = fig.add_subplot(111)
+    ax.scatter(regression.fittedvalues, regression.residuals, 'k')
+    ax.set_xlabel('Fitted values (log of CapEx)')
+    ax.set_ylabel('Residuals')
+
+    residual_fig = 'results/statistics/residuals.png'
+    fig.savefig(residual_fig, dpi=300, bbox_inches='tight')
+    #TODO: cleanup and standardize figure formatting
+
 
 def linearize_forecast(forecast):
     """
@@ -175,6 +221,7 @@ if __name__ == "__main__":
 
     # Regression
     regression = run_regression(PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP)
+    stats_check(regression)
     b0 = regression.cumulative_capacity_fit
     upcoming_capacity = {
         k: v - regression.installed_capacity for k, v in linear_forecast.items()

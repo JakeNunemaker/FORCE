@@ -278,6 +278,8 @@ class Regression:
 
         self.summary = sm_regressor.summary()
         self.r2 = sm_regressor.rsquared
+        self.r2_adj = sm_regressor.rsquared_adj
+        self.pvalues = sm_regressor.pvalues
         self.params = sm_regressor.params
         self.params_dict = dict(self.params)
         self.bse_dict = dict(sm_regressor.bse)
