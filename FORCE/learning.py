@@ -127,7 +127,9 @@ class Regression:
 
         data = self.filter_data(data, filters)
         data = self.append_cumulative(data)
-        data = self.process_categorical_data(data)
+        if 'Country Name' in self.regression_variables:
+        #     # TODO: Better check for categorical variables
+            data = self.process_categorical_data(data)
         data = self.preprocess_data(data)
         return data
 

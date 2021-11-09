@@ -98,12 +98,14 @@ def run_regression(projects, filters, to_aggregate, to_drop, predictors):
         drop_country=to_drop,
         log_vars=['Cumulative Capacity', 'CAPEX_per_kw'],
     )
-
+    print(regression.summary)
     return regression
 
 def stats_check(regression):
     summary_stats = {'R2': regression.r2,
                      'Adjusted R2': regression.r2_adj,
+                     'Experience factor': regression.cumulative_capacity_fit,
+                     'Experience factor standard error': regression.cumulative_capacity_bse,
                      'Learning rate': regression.learning_rate,
                      }
     predictor_stats = zip(regression.pvalues.keys(),
@@ -230,7 +232,7 @@ if __name__ == "__main__":
 
     # ORBIT Results
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years)
-    print(combined_outputs)
+    # print(combined_outputs)
 
     # output_std = combined_outputs.groupby([combined_outputs.index]).std()
     # Plotting
