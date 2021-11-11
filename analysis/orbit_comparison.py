@@ -39,7 +39,7 @@ PROJECTS = pd.read_csv(os.path.join(DIR, "data", "2021_OWMR.csv"), header=2)
 FILTERS = {
     'Capacity MW (Max)': (149, ),
     'Full Commissioning': (2014, 2021),
-    'CAPEX_per_kw': (800, 8000.0)
+    # 'CAPEX_per_kw': (800, 8000.0)   # This doesn't do anything.
 }
 TO_AGGREGATE = {
     'United Kingdom': 'United Kingdom',
@@ -50,11 +50,11 @@ TO_AGGREGATE = {
 }
 TO_DROP = []
 PREDICTORS = [
-            'Country Name',
-            'Water Depth Max (m)',
-            'Turbine MW (Max)',
+            # 'Country Name',
+            # 'Water Depth Max (m)',
+            # # 'Turbine MW (Max)',
             'Capacity MW (Max)',
-            'Distance From Shore Auto (km)'
+            # 'Distance From Shore Auto (km)'
             ]
 
 
@@ -108,7 +108,8 @@ def stats_check(regression):
                      'Experience factor standard error': regression.cumulative_capacity_bse,
                      'Learning rate': regression.learning_rate,
                      }
-    predictor_stats = zip(regression.pvalues.keys(),
+    predictor_stats = zip(regression.params_dict.values(),
+                          regression.pvalues.keys(),
                           regression.pvalues.values,
                           regression.vif)
 
@@ -126,13 +127,15 @@ def stats_check(regression):
         row+=1
     row+=1
     worksheet.write(row, col, 'Predictor variable')
-    worksheet.write(row, col+1, 'P-value')
-    worksheet.write(row, col+2, 'VIF')
+    worksheet.write(row, col + 1, 'Coefficient')
+    worksheet.write(row, col+2, 'P-value')
+    worksheet.write(row, col+3, 'VIF')
     row+=1
-    for var, p, v in predictor_stats:
+    for b, var, p, v in predictor_stats:
         worksheet.write(row, col, var)
-        worksheet.write(row, col+1, p)
-        worksheet.write(row, col+2, v)
+        worksheet.write(row, col + 1, b)
+        worksheet.write(row, col+2, p)
+        worksheet.write(row, col+3, v)
         row+=1
     workbook.close()
 
@@ -236,4 +239,9 @@ if __name__ == "__main__":
 
     # output_std = combined_outputs.groupby([combined_outputs.index]).std()
     # Plotting
-    # TODO: 
+    # TODO:
+    #   1. Ensemble averaged plots for fixed and floating using b0
+    #   2. Ensemble averaged plots for fixed and floating using b0 +/- self.cumulative_capacity_bse.
+#              - If possible, combine with b0 plots into single figure?
+    #   3. Plots for high/medium/low deployment projectsions
+    #   4. Move residuals plto from stats_check into overall plotting script
