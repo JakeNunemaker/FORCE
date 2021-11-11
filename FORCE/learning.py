@@ -258,6 +258,7 @@ class Regression:
         data["CAPEX_per_kw"] = (data["CAPEX_conv"] * 1e6) / (
             data["Capacity MW (Max)"] * 1e3
         )
+
         return data
 
     def multi_linear_regression(self, **kwargs):

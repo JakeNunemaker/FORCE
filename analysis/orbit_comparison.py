@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from ORBIT import ProjectManager, load_config
 from ORBIT.core.library import initialize_library
 from FORCE.learning import Regression
+from plot_routines import scatter_plot
 
 
 DIR = os.path.split(__file__)[0]
@@ -47,14 +48,15 @@ TO_AGGREGATE = {
     'Netherlands': 'Netherlands',
     'Belgium' : 'Belgium',
     'China': 'China',
+    'Denmark': 'Denmark',
 }
 TO_DROP = []
 PREDICTORS = [
-            # 'Country Name',
-            # 'Water Depth Max (m)',
-            # # 'Turbine MW (Max)',
+            'Country Name',
+            'Water Depth Max (m)',
+            # 'Turbine MW (Max)',
             'Capacity MW (Max)',
-            # 'Distance From Shore Auto (km)'
+            'Distance From Shore Auto (km)',
             ]
 
 
@@ -140,15 +142,10 @@ def stats_check(regression):
     workbook.close()
 
     # Plot residuals
-    fig = plt.figure(figsize=(12, 9))
-    ax = fig.add_subplot(111)
-    ax.scatter(regression.fittedvalues, regression.residuals)
-    ax.set_xlabel('Fitted values (log of CapEx)')
-    ax.set_ylabel('Residuals')
+    res_x = regression.fittedvalues
+    res_y = regression.residuals
 
-    residual_fig = 'results/statistics/residuals.png'
-    fig.savefig(residual_fig, dpi=300, bbox_inches='tight')
-    #TODO: cleanup and standardize figure formatting
+    return res_x, res_y
 
 
 def linearize_forecast(forecast):
@@ -227,7 +224,7 @@ if __name__ == "__main__":
 
     # Regression
     regression = run_regression(PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PREDICTORS)
-    stats_check(regression)
+    res_x, res_y = stats_check(regression)
     b0 = regression.cumulative_capacity_fit
     upcoming_capacity = {
         k: v - regression.installed_capacity for k, v in linear_forecast.items()
@@ -235,13 +232,17 @@ if __name__ == "__main__":
 
     # ORBIT Results
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years)
-    # print(combined_outputs)
+    avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0]
+    std_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index', aggfunc=np.std).iloc[0]
 
     # output_std = combined_outputs.groupby([combined_outputs.index]).std()
     # Plotting
+    scatter_plot(res_x, res_y, 'Fitted values (log of CapEx)', 'Residuals', fname='results/statistics/residuals.png')
+
+    #TODO: cleanup and standardize figure formatting
+
     # TODO:
     #   1. Ensemble averaged plots for fixed and floating using b0
     #   2. Ensemble averaged plots for fixed and floating using b0 +/- self.cumulative_capacity_bse.
 #              - If possible, combine with b0 plots into single figure?
     #   3. Plots for high/medium/low deployment projectsions
-    #   4. Move residuals plto from stats_check into overall plotting script
