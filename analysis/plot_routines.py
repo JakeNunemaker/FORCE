@@ -137,13 +137,13 @@ def scatter_plot(x, y, myxlabel, myylabel, fname=None):
 
     return ax
 
-def plot_learning_forecast(
+def plot_forecast(
     installed,
     capex,
+    capex_std,
     fit,
     forecast,
     bse=None,
-    axes=None,
     perc_change=False,
     data_file=None,
     fname=None,
@@ -171,26 +171,15 @@ def plot_learning_forecast(
     data_file :
     """
 
-    if axes is None:
-        fig, ax1 = initFigAxis()
-        ax2 = ax1.twiny()
 
-    else:
-        fig = axes[0]
-        ax1 = axes[1]
-        ax2 = axes[2]
-        # raise NotImplementedError(
-        #     "Passing in pre-constructed axes is not supported yet."
-        # )
+    fig, ax1 = initFigAxis()
+    ax2 = ax1.twiny()
 
     upcoming = [v - installed for _, v in forecast.items()]
 
     x = np.linspace(installed, upcoming[-1])
     b0 = fit
     C0_0 = capex / (installed ** b0)
-    # # y0 = C0_0 * x ** b0
-    # y0 = 1 - C0_0 * x ** b0 / capex
-    # y_per_year = 1 - C0_0 * upcoming ** b0 / capex
 
     if perc_change is False:
         y0 = calc_curve(x, C0_0, b0)
@@ -203,25 +192,25 @@ def plot_learning_forecast(
         _out_col = "Percent change from initial CapEx"
 
     ax1.plot(x, y0, "k-")
+    ax1.errorbar(x[0], y0[0], capex_std, marker='o', markerfacecolor='none', mec='k', mew=3,
+                 ecolor='k', elinewidth=3, capsize=10, capthick=3)
     ax1.set_xlabel("Cumulative Capacity")
     ax1.set_ylabel("CAPEX, $/KW")
 
-    if bse:
-        b1 = fit + bse
-        b2 = fit - bse
 
-        C0_1 = capex / (installed ** b1)
-        C0_2 = capex / (installed ** b2)
+    b1 = fit + bse
+    b2 = fit - bse
 
-        # y1 = C0_1 * x ** b1
-        # y2 = C0_2 * x ** b2
-        if perc_change is False:
-            y1 = calc_curve(x, C0_1, b1)
-            y2 = calc_curve(x, C0_2, b2)
-        else:
-            y1 = calc_curve(x, C0_1, b1, capex_0=capex)
-            y2 = calc_curve(x, C0_2, b2, capex_0=capex)
-        ax1.fill_between(x, y1, y2, alpha=0.5)
+    C0_hi = (capex + capex_std) / (installed ** b1)  # Higher initial costs, lower learning rate
+    C0_lo = (capex - capex_std) / (installed ** b2)  # Lower initial costs, higher learning rate
+
+    if perc_change is False:
+        y1 = calc_curve(x, C0_hi, b1)
+        y2 = calc_curve(x, C0_lo, b2)
+    else:
+        y1 = calc_curve(x, C0_hi, b2, capex_0=capex+capex_std)
+        y2 = calc_curve(x, C0_lo, b1, capex_0=capex-capex_std)
+    ax1.fill_between(x, y1, y2, alpha=0.5)
 
     ax2.set_xlim(ax1.get_xlim())
     ax2.set_xticks(upcoming)
@@ -239,7 +228,6 @@ def plot_learning_forecast(
         _out.set_index("Year").to_csv(data_file)
 
     return fig, ax1, ax2
-
 
 def calc_curve(x, C0, b, capex_0=None):
     """Fit the learning curve to a prescribed range of years"""

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from ORBIT import ProjectManager, load_config
 from ORBIT.core.library import initialize_library
 from FORCE.learning import Regression
-from plot_routines import scatter_plot, plot_learning_forecast
+from plot_routines import scatter_plot, plot_forecast
 
 
 DIR = os.path.split(__file__)[0]
@@ -234,42 +234,21 @@ if __name__ == "__main__":
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index', aggfunc=np.std).iloc[0].values[0]
 
-    # output_std = combined_outputs.groupby([combined_outputs.index]).std()
     ### Plotting
     # Forecast
-    fig, ax1, ax2 = plot_learning_forecast(regression.installed_capacity,
-                           avg_start,
-                           b0,
-                           upcoming_capacity,
-                           regression.cumulative_capacity_bse,
-                           data_file='results/data.csv',
-                           # fname='results/forecast.png'
-                           )
-    fig1, ax1_std1, ax2_std1 = plot_learning_forecast(regression.installed_capacity,
-                           avg_start + std_start,
-                           b0,
-                           upcoming_capacity,
-                           regression.cumulative_capacity_bse,
-                           axes=[fig, ax1,ax2],
-                           # data_file='results/data.csv',
-                           # fname='results/forecast.png'
-                           )
-    fig2, ax1_std2, ax2_std2 = plot_learning_forecast(regression.installed_capacity,
-                                                avg_start - std_start,
-                                                b0,
-                                                upcoming_capacity,
-                                                regression.cumulative_capacity_bse,
-                                                axes=[fig1, ax1_std1, ax2_std1],
-                                                # data_file='results/data.csv',
-                                                fname='results/forecast.png'
-                                                )
+    plot_forecast(
+        regression.installed_capacity,
+        avg_start,
+        std_start,
+        b0,
+        upcoming_capacity,
+        regression.cumulative_capacity_bse,
+        # data_file='results/data.csv',
+        fname='results/forecast.png'
+    )
     # Residuals
     scatter_plot(res_x, res_y, 'Fitted values (log of CapEx)', 'Residuals', fname='results/statistics/residuals.png')
 
-    #TODO: cleanup and standardize figure formatting
-
     # TODO:
-    #   1. Ensemble averaged plots for fixed and floating using b0
-    #   2. Ensemble averaged plots for fixed and floating using b0 +/- self.cumulative_capacity_bse.
-#              - If possible, combine with b0 plots into single figure?
+    #   1. Line up x ticks in plot_forecast
     #   3. Plots for high/medium/low deployment projectsions
