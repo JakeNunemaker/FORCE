@@ -81,6 +81,13 @@ ORBIT_SITES = {
         2025: "site_4_2025.yaml",
         2030: "site_4_2030.yaml",
         2035: "site_4_2035.yaml"
+    },
+
+    "Site 5": {
+        2021: "site_5_2021.yaml",
+        2025: "site_5_2025.yaml",
+        2030: "site_5_2030.yaml",
+        2035: "site_5_2035.yaml"
     }
 }
 
