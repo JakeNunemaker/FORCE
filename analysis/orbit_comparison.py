@@ -67,6 +67,13 @@ ORBIT_SITES = {
         2025: "site_2_2025.yaml",
         2030: "site_2_2030.yaml",
         2035: "site_2_2035.yaml"
+    },
+
+    "Site 3": {
+        2021: "site_3_2021.yaml",
+        2025: "site_3_2025.yaml",
+        2030: "site_3_2030.yaml",
+        2035: "site_3_2035.yaml"
     }
 }
 
@@ -198,6 +205,7 @@ def run_orbit_configs(sites, b0, upcoming, years):
             site_data.loc[int(yr), "ORBIT"] = project.total_capex_per_kw
 
         min_yr = min(configs.keys())  # TODO: What if min_yr doesn't line up with first forecast year?
+        # TODO: bug in min_yr for Regression (lower than ORBIT)
         c = site_data.loc[min_yr, "ORBIT"] / (regression.installed_capacity ** b0)
         site_data.loc[min_yr, "Regression"] = c * upcoming[yr] ** b0
         for yr in years[1:]:
@@ -240,6 +248,7 @@ if __name__ == "__main__":
     }
     # ORBIT Results
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years)
+    print(combined_outputs)
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index', aggfunc=np.std).iloc[0].values[0]
 
@@ -261,3 +270,6 @@ if __name__ == "__main__":
     # TODO:
     #   1. Line up x ticks in plot_forecast
     #   3. Plots for high/medium/low deployment projectsions
+    #   2.  Check why 2021 Capex is lower for Regression than for ORBIT
+    #   4.  Add LCOE forecast plot
+
