@@ -1,3 +1,7 @@
+# Reference Site 2 characteristics
+# Shallow water, far from shore, high NCF, mid-range capacity
+# 2021 technology choices:
+#   - 12 MW turbines
 OffshoreSubstationInstallation:
   feeder: oss_2xfeeder
   num_feeders: 1
@@ -30,7 +34,7 @@ install_phases:
 num_feeders: 2
 plant:
   layout: ring
-  num_turbines: 100
+  num_turbines: 67
   row_spacing: 7
   substation_distance: 1
   turbine_spacing: 7
@@ -40,20 +44,20 @@ port:
 project_parameters:
   opex_rate: 75
   turbine_capex: 1100
-  ncf: 0.486
+  ncf: 0.5
   opex: 129
-  fcr: .1
+  fcr: .058
 scour_protection_design:
   cost_per_tonne: 20
   scour_protection_depth: 1
 site:
-  depth: 20
-  distance: 150
-  distance_to_landfall: 25
+  depth: 30
+  distance: 285
+  distance_to_landfall: 48
   mean_windspeed: 9
 spi_vessel: current_scour_protection_vessel
 substation_design:
-  num_substations: 3
-turbine: 10MW_generic
+  num_substations: 1
+turbine: 12MW_generic
 wtiv: current_wtiv
 weather: block_island.csv
