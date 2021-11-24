@@ -30,7 +30,7 @@ install_phases:
 num_feeders: 2
 plant:
   layout: ring
-  num_turbines: 100
+  num_turbines: 67
   row_spacing: 7
   substation_distance: 1
   turbine_spacing: 7
@@ -40,8 +40,8 @@ port:
 project_parameters:
   opex_rate: 75
   turbine_capex: 1100
-  ncf: 0.486
-  opex: 129
+  ncf: 0.516
+  opex: 65
   fcr: .1
 scour_protection_design:
   cost_per_tonne: 20
@@ -54,6 +54,6 @@ site:
 spi_vessel: current_scour_protection_vessel
 substation_design:
   num_substations: 3
-turbine: 10MW_generic
+turbine: 15MW_generic
 wtiv: current_wtiv
 weather: block_island.csv

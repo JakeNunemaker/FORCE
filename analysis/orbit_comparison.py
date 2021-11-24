@@ -29,18 +29,11 @@ initialize_library(LIBRARY)
 FORECAST_FP = os.path.join(DIR, "data", "2021_forecast.csv")
 FORECAST = pd.read_csv(FORECAST_FP).set_index("year").to_dict()["capacity"]
 
-## LCOE Parameters
-OPEX = (129, 65)       # (start of forecast, end of forecast)
-NCF = (0.486, 0.516)   # (start of forecast, end of forecast)
-FCR = (0.1, 0.1)       # (start of forecast, end of forecast)
-
-
 ## Regression Settings
 PROJECTS = pd.read_csv(os.path.join(DIR, "data", "2021_OWMR.csv"), header=2)
 FILTERS = {
     'Capacity MW (Max)': (149, ),
     'Full Commissioning': (2014, 2021),
-    # 'CAPEX_per_kw': (800, 8000.0)   # This doesn't do anything.
 }
 TO_AGGREGATE = {
     'United Kingdom': 'United Kingdom',
@@ -65,13 +58,15 @@ ORBIT_SITES = {
     "Site 1": {
         2021: "site_1_2020.yaml",
         2025: "site_1_2025.yaml",
-        2030: "site_1_2020.yaml"
+        2030: "site_1_2030.yaml",
+        2035: "site_1_2035.yaml"
     },
 
     "Site 2": {
         2021: "site_2_2020.yaml",
         2025: "site_2_2025.yaml",
-        2030: "site_2_2020.yaml"
+        2030: "site_2_2030.yaml",
+        2035: "site_2_2035.yaml"
     }
 }
 
@@ -171,10 +166,6 @@ def _zip_into_years(start, stop, years):
 def run_orbit_configs(sites, b0, upcoming, years):
     """"""
 
-    opex = {yr: val for yr, val in zip(years, np.linspace(*OPEX, len(years)))}
-    ncf = {yr: val for yr, val in zip(years, np.linspace(*NCF, len(years)))}
-    fcr = {yr: val for yr, val in zip(years, np.linspace(*FCR, len(years)))}
-
     orbit_outputs = []
     for name, configs in sites.items():
 
@@ -191,6 +182,16 @@ def run_orbit_configs(sites, b0, upcoming, years):
             else:
                 weather = None
 
+            #TODO: better indexing
+            if yr == 2021:
+                ncf_i = config['project_parameters']['ncf']
+                opex_i = config['project_parameters']['opex']
+                fcr_i = config['project_parameters']['fcr']
+            elif yr == 2035:
+                ncf_f = config['project_parameters']['ncf']
+                opex_f = config['project_parameters']['opex']
+                fcr_f = config['project_parameters']['fcr']
+
             project = ProjectManager(config, weather)
             project.run()
 
@@ -201,6 +202,14 @@ def run_orbit_configs(sites, b0, upcoming, years):
         site_data.loc[min_yr, "Regression"] = c * upcoming[yr] ** b0
         for yr in years[1:]:
             site_data.loc[yr, "Regression"] = c * upcoming[yr] ** b0
+
+        # Define Opex, NCF, FCR arrays
+        OPEX = (opex_i, opex_f)
+        NCF = (ncf_i, ncf_f)
+        FCR = (fcr_i, fcr_f)
+        opex = {yr: val for yr, val in zip(years, np.linspace(*OPEX, len(years)))}
+        ncf = {yr: val for yr, val in zip(years, np.linspace(*NCF, len(years)))}
+        fcr = {yr: val for yr, val in zip(years, np.linspace(*FCR, len(years)))}
 
         site_data["OpEx"] = opex.values()
         aep = {k: v * 8760 for k, v in ncf.items()}  # MWh

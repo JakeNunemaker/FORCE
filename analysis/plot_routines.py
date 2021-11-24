@@ -208,8 +208,8 @@ def plot_forecast(
         y1 = calc_curve(x, C0_hi, b1)
         y2 = calc_curve(x, C0_lo, b2)
     else:
-        y1 = calc_curve(x, C0_hi, b2, capex_0=capex+capex_std)
-        y2 = calc_curve(x, C0_lo, b1, capex_0=capex-capex_std)
+        y1 = calc_curve(x, C0_hi, b1, capex_0=capex+capex_std)
+        y2 = calc_curve(x, C0_lo, b2, capex_0=capex-capex_std)
     ax1.fill_between(x, y1, y2, alpha=0.5)
 
     ax2.set_xlim(ax1.get_xlim())
