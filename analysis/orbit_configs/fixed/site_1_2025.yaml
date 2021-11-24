@@ -1,3 +1,7 @@
+# Reference Site 1 characteristics (lowest LCOE)
+# Shallow water, close to shore, high NCF
+# 2025 technology choices:
+#   - 15 MW turbines
 OffshoreSubstationInstallation:
   feeder: oss_2xfeeder
   num_feeders: 1
@@ -30,7 +34,7 @@ install_phases:
 num_feeders: 2
 plant:
   layout: ring
-  num_turbines: 83
+  num_turbines: 80
   row_spacing: 7
   substation_distance: 1
   turbine_spacing: 7
@@ -44,13 +48,13 @@ scour_protection_design:
   cost_per_tonne: 20
   scour_protection_depth: 1
 site:
-  depth: 40
-  distance: 150
-  distance_to_landfall: 100
-  mean_windspeed: 9.5
+  depth: 28
+  distance: 125
+  distance_to_landfall: 25
+  mean_windspeed: 9
 spi_vessel: current_scour_protection_vessel
 substation_design:
-  num_substations: 3
-turbine: 12MW_generic
+  num_substations: 2
+turbine: 15MW_generic
 wtiv: current_wtiv
 weather: block_island.csv
