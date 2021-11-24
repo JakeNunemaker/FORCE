@@ -184,7 +184,7 @@ def _zip_into_years(start, stop, years):
     return {yr: val for yr, val in zip(years, np.linspace(start, stop, len(years)))}
 
 
-def run_orbit_configs(sites, b0, upcoming, years):
+def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None):
     """"""
 
     orbit_outputs = []
@@ -220,8 +220,12 @@ def run_orbit_configs(sites, b0, upcoming, years):
 
         min_yr = min(configs.keys())  # TODO: What if min_yr doesn't line up with first forecast year?
 
+        # TODO: Not sure which one of these is more appropriate.
         # c = site_data.loc[min_yr, "ORBIT"] / (regression.installed_capacity ** b0)
-        c = site_data.loc[min_yr, "ORBIT"] / (upcoming[min_yr] ** b0)
+        if initial_capex:
+            c = initial_capex / (upcoming[min_yr] ** b0)
+        else:
+            c = site_data.loc[min_yr, "ORBIT"] / (upcoming[min_yr] ** b0)
         site_data.loc[min_yr, "Regression"] = c * upcoming[min_yr] ** b0
         for yr in years[1:]:
             site_data.loc[yr, "Regression"] = c * upcoming[yr] ** b0
@@ -258,14 +262,28 @@ if __name__ == "__main__":
     regression = run_regression(PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PREDICTORS)
     res_x, res_y = stats_check(regression)
     b0 = regression.cumulative_capacity_fit
+    bse = regression.cumulative_capacity_bse
     upcoming_capacity = {
         k: v - regression.installed_capacity for k, v in linear_forecast.items()
     }
     # ORBIT Results
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years)
-    print(combined_outputs)
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index', aggfunc=np.std).iloc[0].values[0]
+    # Bounds for faster/slower learning rate
+    combined_outputs_conservative = run_orbit_configs(ORBIT_SITES, b0+bse, upcoming_capacity, years, initial_capex=avg_start+std_start)
+    combined_outputs_aggressive = run_orbit_configs(ORBIT_SITES, b0-bse, upcoming_capacity, years, initial_capex=avg_start-std_start)
+    ### Select results
+    # Capex
+    avg_capex = pd.pivot_table(combined_outputs.reset_index(), values='Regression', index='index')
+    avg_capex_conservative = pd.pivot_table(combined_outputs_conservative.reset_index(), values='Regression', index='index', aggfunc=max)
+    avg_capex_aggressive = pd.pivot_table(combined_outputs_aggressive.reset_index(), values='Regression', index='index', aggfunc=min)
+    # LCOE
+    avg_lcoe = pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index')
+    avg_lcoe_conservative = pd.pivot_table(combined_outputs_conservative.reset_index(), values='LCOE',
+                                            index='index', aggfunc=max)
+    avg_lcoe_aggressive = pd.pivot_table(combined_outputs_aggressive.reset_index(), values='LCOE', index='index',
+                                          aggfunc=min)
 
     ### Plotting
     # Forecast
@@ -276,6 +294,7 @@ if __name__ == "__main__":
         b0,
         upcoming_capacity,
         regression.cumulative_capacity_bse,
+        perc_change=False,
         # data_file='results/data.csv',
         fname='results/forecast.png'
     )
@@ -285,6 +304,5 @@ if __name__ == "__main__":
     # TODO:
     #   1. Line up x ticks in plot_forecast
     #   3. Plots for high/medium/low deployment projectsions
-    #   2.  Check why 2021 Capex is lower for Regression than for ORBIT
     #   4.  Add LCOE forecast plot
 
