@@ -69,26 +69,26 @@ ORBIT_SITES = {
         2035: "site_2_2035.yaml"
     },
 
-    "Site 3": {
-        2021: "site_3_2021.yaml",
-        2025: "site_3_2025.yaml",
-        2030: "site_3_2030.yaml",
-        2035: "site_3_2035.yaml"
-    },
-
-    "Site 4": {
-        2021: "site_4_2021.yaml",
-        2025: "site_4_2025.yaml",
-        2030: "site_4_2030.yaml",
-        2035: "site_4_2035.yaml"
-    },
-
-    "Site 5": {
-        2021: "site_5_2021.yaml",
-        2025: "site_5_2025.yaml",
-        2030: "site_5_2030.yaml",
-        2035: "site_5_2035.yaml"
-    }
+    # "Site 3": {
+    #     2021: "site_3_2021.yaml",
+    #     2025: "site_3_2025.yaml",
+    #     2030: "site_3_2030.yaml",
+    #     2035: "site_3_2035.yaml"
+    # },
+    #
+    # "Site 4": {
+    #     2021: "site_4_2021.yaml",
+    #     2025: "site_4_2025.yaml",
+    #     2030: "site_4_2030.yaml",
+    #     2035: "site_4_2035.yaml"
+    # },
+    #
+    # "Site 5": {
+    #     2021: "site_5_2021.yaml",
+    #     2025: "site_5_2025.yaml",
+    #     2030: "site_5_2030.yaml",
+    #     2035: "site_5_2035.yaml"
+    # }
 }
 
 
@@ -116,7 +116,7 @@ def run_regression(projects, filters, to_aggregate, to_drop, predictors):
         drop_country=to_drop,
         log_vars=['Cumulative Capacity', 'CAPEX_per_kw'],
     )
-    print(regression.summary)
+    # print(regression.summary)
     return regression
 
 def stats_check(regression):
@@ -219,9 +219,10 @@ def run_orbit_configs(sites, b0, upcoming, years):
             site_data.loc[int(yr), "ORBIT"] = project.total_capex_per_kw
 
         min_yr = min(configs.keys())  # TODO: What if min_yr doesn't line up with first forecast year?
-        # TODO: bug in min_yr for Regression (lower than ORBIT)
-        c = site_data.loc[min_yr, "ORBIT"] / (regression.installed_capacity ** b0)
-        site_data.loc[min_yr, "Regression"] = c * upcoming[yr] ** b0
+
+        # c = site_data.loc[min_yr, "ORBIT"] / (regression.installed_capacity ** b0)
+        c = site_data.loc[min_yr, "ORBIT"] / (upcoming[min_yr] ** b0)
+        site_data.loc[min_yr, "Regression"] = c * upcoming[min_yr] ** b0
         for yr in years[1:]:
             site_data.loc[yr, "Regression"] = c * upcoming[yr] ** b0
 
