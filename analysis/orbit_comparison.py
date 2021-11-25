@@ -69,26 +69,26 @@ ORBIT_SITES = {
         2035: "site_2_2035.yaml"
     },
 
-    # "Site 3": {
-    #     2021: "site_3_2021.yaml",
-    #     2025: "site_3_2025.yaml",
-    #     2030: "site_3_2030.yaml",
-    #     2035: "site_3_2035.yaml"
-    # },
-    #
-    # "Site 4": {
-    #     2021: "site_4_2021.yaml",
-    #     2025: "site_4_2025.yaml",
-    #     2030: "site_4_2030.yaml",
-    #     2035: "site_4_2035.yaml"
-    # },
-    #
-    # "Site 5": {
-    #     2021: "site_5_2021.yaml",
-    #     2025: "site_5_2025.yaml",
-    #     2030: "site_5_2030.yaml",
-    #     2035: "site_5_2035.yaml"
-    # }
+    "Site 3": {
+        2021: "site_3_2021.yaml",
+        2025: "site_3_2025.yaml",
+        2030: "site_3_2030.yaml",
+        2035: "site_3_2035.yaml"
+    },
+
+    "Site 4": {
+        2021: "site_4_2021.yaml",
+        2025: "site_4_2025.yaml",
+        2030: "site_4_2030.yaml",
+        2035: "site_4_2035.yaml"
+    },
+
+    "Site 5": {
+        2021: "site_5_2021.yaml",
+        2025: "site_5_2025.yaml",
+        2030: "site_5_2030.yaml",
+        2035: "site_5_2035.yaml"
+    }
 }
 
 
@@ -270,34 +270,44 @@ if __name__ == "__main__":
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years)
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index', aggfunc=np.std).iloc[0].values[0]
+    std_lcoe_start = pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index', aggfunc=np.std).iloc[0].values[0]
+
     # Bounds for faster/slower learning rate
     combined_outputs_conservative = run_orbit_configs(ORBIT_SITES, b0+bse, upcoming_capacity, years, initial_capex=avg_start+std_start)
     combined_outputs_aggressive = run_orbit_configs(ORBIT_SITES, b0-bse, upcoming_capacity, years, initial_capex=avg_start-std_start)
     ### Select results
     # Capex
-    avg_capex = pd.pivot_table(combined_outputs.reset_index(), values='Regression', index='index')
-    avg_capex_conservative = pd.pivot_table(combined_outputs_conservative.reset_index(), values='Regression', index='index', aggfunc=max)
-    avg_capex_aggressive = pd.pivot_table(combined_outputs_aggressive.reset_index(), values='Regression', index='index', aggfunc=min)
+    avg_capex = np.array(pd.pivot_table(combined_outputs.reset_index(), values='Regression', index='index').loc[:,'Regression'])
+    avg_capex_conservative = np.array(pd.pivot_table(combined_outputs_conservative.reset_index(), values='Regression', index='index', aggfunc=max).loc[:,'Regression'])
+    avg_capex_aggressive = np.array(pd.pivot_table(combined_outputs_aggressive.reset_index(), values='Regression', index='index', aggfunc=min).loc[:,'Regression'])
     # LCOE
-    avg_lcoe = pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index')
-    avg_lcoe_conservative = pd.pivot_table(combined_outputs_conservative.reset_index(), values='LCOE',
-                                            index='index', aggfunc=max)
-    avg_lcoe_aggressive = pd.pivot_table(combined_outputs_aggressive.reset_index(), values='LCOE', index='index',
-                                          aggfunc=min)
-
+    avg_lcoe = np.array(pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index').loc[:,'LCOE'])
+    avg_lcoe_conservative = np.array(pd.pivot_table(combined_outputs_conservative.reset_index(), values='LCOE',
+                                            index='index', aggfunc=max).loc[:,'LCOE'])
+    avg_lcoe_aggressive = np.array(pd.pivot_table(combined_outputs_aggressive.reset_index(), values='LCOE', index='index',
+                                          aggfunc=min).loc[:,'LCOE'])
     ### Plotting
     # Forecast
     plot_forecast(
-        regression.installed_capacity,
-        avg_start,
-        std_start,
-        b0,
         upcoming_capacity,
-        regression.cumulative_capacity_bse,
-        perc_change=False,
-        # data_file='results/data.csv',
-        fname='results/forecast.png'
+        avg_capex,
+        avg_capex_aggressive,
+        avg_capex_conservative,
+        std_start,
+        ylabel='Capex, $/kW',
+        fname = 'results/capex_forecast.png'
     )
+
+    plot_forecast(
+        upcoming_capacity,
+        avg_lcoe,
+        avg_lcoe_aggressive,
+        avg_lcoe_conservative,
+        std_lcoe_start,
+        ylabel='LCOE, $/MWh',
+        fname='results/lcoe_forecast.png'
+    )
+
     # Residuals
     scatter_plot(res_x, res_y, 'Fitted values (log of CapEx)', 'Residuals', fname='results/statistics/residuals.png')
 
