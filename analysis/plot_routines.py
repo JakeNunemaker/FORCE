@@ -155,8 +155,6 @@ def plot_forecast(forecast, y, y1, y2, y_std, ylabel,
     x = list(forecast.values())
     # Plot
     ax1.plot(x, y, 'k-')
-    ax1.errorbar(x[0], y[0], y_std, marker='o', markerfacecolor='none', mec='k', mew=3,
-                 ecolor='k', elinewidth=3, capsize=10, capthick=3)
     ax1.fill_between(x, y1, y2, alpha=0.5)
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
@@ -170,6 +168,8 @@ def plot_forecast(forecast, y, y1, y2, y_std, ylabel,
         mysave(fig, fname)
         plt.close()
 
+    return fig, ax1
+
     # if data_file:
     #     _out = pd.DataFrame({"Year": forecast.keys(), _out_col: y0_per_year})
     #
@@ -177,3 +177,34 @@ def plot_forecast(forecast, y, y1, y2, y_std, ylabel,
     #
     # return fig, ax1, ax2
 
+def plot_forecast_comp(fig, ax, forecast, yavg, ymin, ymax, y0, ylabel,
+                  xlabel='Cumulative Capacity, MW', fname=None):
+    """
+    :param x:
+    :param y:
+    :param y1:
+    :param y2:
+    :param y_std:
+    :return:
+    """
+
+
+
+    # Extract annual capacity from forecast
+    x = list(forecast.values())
+    # Plot
+    ax.plot(x, yavg, 'k-')
+    ax.plot(x, ymin, 'k--')
+    ax.plot(x, ymax, 'k--')
+    ax.scatter(x[0]*np.ones(len(y0)), y0, marker='x', c='k')
+    # ax1.set_xlabel(xlabel)
+    # ax1.set_ylabel(ylabel)
+    #
+    # ax2.set_xlim(ax1.get_xlim())
+    # ax2.set_xticks(x)
+    # ax2.set_xticklabels(forecast.keys(), rotation=45, fontsize=8)
+
+    if fname:
+        myformat(ax)
+        mysave(fig, fname)
+        plt.close()

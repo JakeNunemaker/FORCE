@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 from ORBIT import ProjectManager, load_config
 from ORBIT.core.library import initialize_library
 from FORCE.learning import Regression
-from plot_routines import scatter_plot, plot_forecast
+from plot_routines import scatter_plot, plot_forecast, plot_forecast_comp
+import pprint as pp
 
 
 DIR = os.path.split(__file__)[0]
@@ -44,17 +45,24 @@ TO_AGGREGATE = {
     'Denmark': 'Denmark',
 }
 TO_DROP = []
-PREDICTORS = [
+FIXED_PREDICTORS = [
             'Country Name',
             'Water Depth Max (m)',
             # 'Turbine MW (Max)',
             'Capacity MW (Max)',
             'Distance From Shore Auto (km)',
             ]
+FLOAT_PREDICTORS = [
+            'Country Name',
+            'Water Depth Max (m)',
+            # 'Turbine MW (Max)',
+            # 'Capacity MW (Max)',
+            'Distance From Shore Auto (km)',
+            ]
 
 
 ## ORBIT Sites + Configs
-ORBIT_SITES = {
+ORBIT_FIXED_SITES = {
     "Site 1": {
         2021: "site_1_2021.yaml",
         2025: "site_1_2025.yaml",
@@ -91,6 +99,14 @@ ORBIT_SITES = {
     }
 }
 
+ORBIT_FLOATING_SITES = {
+    "Site 1": {
+        2021: "site_1_2021.yaml",
+        2025: "site_1_2025.yaml",
+        2030: "site_1_2030.yaml",
+        2035: "site_1_2035.yaml"
+    },
+}
 
 ### Functions
 def run_regression(projects, filters, to_aggregate, to_drop, predictors):
@@ -116,7 +132,7 @@ def run_regression(projects, filters, to_aggregate, to_drop, predictors):
         drop_country=to_drop,
         log_vars=['Cumulative Capacity', 'CAPEX_per_kw'],
     )
-    # print(regression.summary)
+    print(regression.summary)
     return regression
 
 def stats_check(regression):
@@ -184,7 +200,7 @@ def _zip_into_years(start, stop, years):
     return {yr: val for yr, val in zip(years, np.linspace(start, stop, len(years)))}
 
 
-def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None):
+def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None, fixfloat='fixed'):
     """"""
 
     orbit_outputs = []
@@ -194,7 +210,7 @@ def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None):
 
         for yr, c in configs.items():
 
-            config = load_config(os.path.join(DIR, "orbit_configs", "fixed", c))
+            config = load_config(os.path.join(DIR, "orbit_configs", fixfloat, c))
             weather_file = config.pop("weather", None)
 
             if weather_file is not None:
@@ -251,10 +267,9 @@ def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None):
 
     return combined_outputs
 
-
-### Main Script
-if __name__ == "__main__":
-    
+def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PREDICTORS, ORBIT_SITES,
+                        fixfloat='fixed'):
+    """Run all subroutines to create regression fit and all plots"""
     # Forecast
     years, linear_forecast = linearize_forecast(FORECAST)
 
@@ -266,53 +281,112 @@ if __name__ == "__main__":
     upcoming_capacity = {
         k: v - regression.installed_capacity for k, v in linear_forecast.items()
     }
+
     # ORBIT Results
-    combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years)
+    combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years, fixfloat=fixfloat)
+    initial_capex_range = combined_outputs.loc[2021, 'ORBIT'].values
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
-    std_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index', aggfunc=np.std).iloc[0].values[0]
-    std_lcoe_start = pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index', aggfunc=np.std).iloc[0].values[0]
+    std_start =  \
+        pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index', aggfunc=np.std).iloc[0].values[0]
+    std_lcoe_start = \
+        pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index', aggfunc=np.std).iloc[0].values[0]
 
     # Bounds for faster/slower learning rate
-    combined_outputs_conservative = run_orbit_configs(ORBIT_SITES, b0+bse, upcoming_capacity, years, initial_capex=avg_start+std_start)
-    combined_outputs_aggressive = run_orbit_configs(ORBIT_SITES, b0-bse, upcoming_capacity, years, initial_capex=avg_start-std_start)
-    ### Select results
+    combined_outputs_max_conservative = run_orbit_configs(ORBIT_SITES, b0 + bse, upcoming_capacity, years,
+                                                      initial_capex=avg_start + std_start,
+                                                      fixfloat=fixfloat)
+    combined_outputs_min_aggressive = run_orbit_configs(ORBIT_SITES, b0 - bse, upcoming_capacity, years,
+                                                    initial_capex=avg_start - std_start,
+                                                    fixfloat=fixfloat)
+    combined_outputs_avg_conservative = run_orbit_configs(ORBIT_SITES, b0 + bse, upcoming_capacity, years, fixfloat=fixfloat)
+    combined_outputs_avg_aggressive = run_orbit_configs(ORBIT_SITES, b0 - bse, upcoming_capacity, years, fixfloat=fixfloat)
+
     # Capex
-    avg_capex = np.array(pd.pivot_table(combined_outputs.reset_index(), values='Regression', index='index').loc[:,'Regression'])
-    avg_capex_conservative = np.array(pd.pivot_table(combined_outputs_conservative.reset_index(), values='Regression', index='index', aggfunc=max).loc[:,'Regression'])
-    avg_capex_aggressive = np.array(pd.pivot_table(combined_outputs_aggressive.reset_index(), values='Regression', index='index', aggfunc=min).loc[:,'Regression'])
+    avg_capex = np.array(pd.pivot_table(combined_outputs.reset_index(),
+                                        values='Regression', index='index').loc[:,'Regression'])
+    avg_capex_conservative = \
+        np.array(pd.pivot_table(combined_outputs_avg_conservative.reset_index(),
+                                values='Regression', index='index').loc[:, 'Regression'])
+    avg_capex_aggressive = \
+        np.array(pd.pivot_table(combined_outputs_avg_aggressive.reset_index(),
+                                values='Regression', index='index').loc[:, 'Regression'])
+    max_capex_conservative = \
+        np.array(pd.pivot_table(combined_outputs_max_conservative.reset_index(),
+                                values='Regression', index='index', aggfunc=max).loc[:,'Regression'])
+    min_capex_aggressive = \
+        np.array(pd.pivot_table(combined_outputs_min_aggressive.reset_index(),
+                                values='Regression', index='index', aggfunc=min).loc[:,'Regression'])
     # LCOE
     avg_lcoe = np.array(pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index').loc[:,'LCOE'])
-    avg_lcoe_conservative = np.array(pd.pivot_table(combined_outputs_conservative.reset_index(), values='LCOE',
-                                            index='index', aggfunc=max).loc[:,'LCOE'])
-    avg_lcoe_aggressive = np.array(pd.pivot_table(combined_outputs_aggressive.reset_index(), values='LCOE', index='index',
-                                          aggfunc=min).loc[:,'LCOE'])
+    max_lcoe_conservative = np.array(pd.pivot_table(combined_outputs_max_conservative.reset_index(),
+                                                    values='LCOE', index='index', aggfunc=max).loc[:,'LCOE'])
+    min_lcoe_aggressive = np.array(pd.pivot_table(combined_outputs_min_aggressive.reset_index(),
+                                                  values='LCOE', index='index', aggfunc=min).loc[:,'LCOE'])
     ### Plotting
     # Forecast
+    fname_capex = 'results/' + fixfloat + '_capex_forecast.png'
+    fig_capex, ax_capex = plot_forecast(
+        upcoming_capacity,
+        avg_capex,
+        min_capex_aggressive,
+        max_capex_conservative,
+        std_start,
+        ylabel='Capex, $/kW',
+        fname=fname_capex
+    )
+
+    fname_lcoe = 'results/' + fixfloat + '_lcoe_forecast.png'
     plot_forecast(
+        upcoming_capacity,
+        avg_lcoe,
+        min_lcoe_aggressive,
+        max_lcoe_conservative,
+        std_lcoe_start,
+        ylabel='LCOE, $/MWh',
+        fname=fname_lcoe
+    )
+
+    # Residuals
+    fname_residuals = 'results/statistics/' + fixfloat + '_residuals.png'
+    scatter_plot(res_x, res_y, 'Fitted values (log of CapEx)', 'Residuals', fname=fname_residuals)
+
+    # Sensitivities
+    fname_uncert = 'results/' + fixfloat + '_capex_forecast_uncertainty.png'
+    plot_forecast_comp(
+        fig_capex,
+        ax_capex,
         upcoming_capacity,
         avg_capex,
         avg_capex_aggressive,
         avg_capex_conservative,
-        std_start,
+        initial_capex_range,
         ylabel='Capex, $/kW',
-        fname = 'results/capex_forecast.png'
+        fname=fname_uncert
     )
 
-    plot_forecast(
-        upcoming_capacity,
-        avg_lcoe,
-        avg_lcoe_aggressive,
-        avg_lcoe_conservative,
-        std_lcoe_start,
-        ylabel='LCOE, $/MWh',
-        fname='results/lcoe_forecast.png'
-    )
 
-    # Residuals
-    scatter_plot(res_x, res_y, 'Fitted values (log of CapEx)', 'Residuals', fname='results/statistics/residuals.png')
+
+### Main Script
+if __name__ == "__main__":
+
+    # Fixed bottom
+    # regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES)
+
+    # Floating
+    float_phases = ['ArraySystemDesign',
+                    'MooringSystemDesign',
+                    'ExportSystemDesign',
+                    'SemiSubmersibleDesign',
+                    'OffshoreSubstationDesign',
+                    'ArrayCableInstallation',
+                    'ExportCableInstallation',
+                    'MooringSystemInstallation',
+                    'MooredSubInstallation',]
+    pp.pprint(ProjectManager.compile_input_dict(float_phases))
+
+
 
     # TODO:
-    #   1. Line up x ticks in plot_forecast
     #   3. Plots for high/medium/low deployment projectsions
-    #   4.  Add LCOE forecast plot
+    #   4.  Floating
 
