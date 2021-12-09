@@ -102,8 +102,14 @@ ORBIT_FIXED_SITES = {
 ORBIT_FLOATING_SITES = {
     "Site 1": {
         2021: "site_1_2021.yaml",
-        2025: "site_1_2025.yaml",
-        2030: "site_1_2030.yaml",
+        # 2025: "site_1_2025.yaml",
+        # 2030: "site_1_2030.yaml",
+        2035: "site_1_2035.yaml"
+    },
+    "Site 2": {
+        2021: "site_1_2021.yaml",
+        # 2025: "site_1_2025.yaml",
+        # 2030: "site_1_2030.yaml",
         2035: "site_1_2035.yaml"
     },
 }
@@ -284,6 +290,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
 
     # ORBIT Results
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years, fixfloat=fixfloat)
+    print(combined_outputs)
     initial_capex_range = combined_outputs.loc[2021, 'ORBIT'].values
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start =  \
@@ -383,6 +390,8 @@ if __name__ == "__main__":
                     'MooringSystemInstallation',
                     'MooredSubInstallation',]
     pp.pprint(ProjectManager.compile_input_dict(float_phases))
+    regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FLOAT_PREDICTORS, ORBIT_FLOATING_SITES,
+                        fixfloat='floating')
 
 
 

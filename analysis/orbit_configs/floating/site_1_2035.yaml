@@ -1,7 +1,7 @@
 # Floating reference Site 1 characteristics
 # Shallow water, close to shore, high NCF, high capacity
 # 2021 technology choices:
-#   - 12 MW turbines
+#   - 20 MW turbines
 OffshoreSubstationInstallation:
   feeder: oss_2xfeeder
   num_feeders: 1
@@ -36,7 +36,7 @@ mooring_system_design:
   num_lines: 3
 plant:
   layout: ring
-  num_turbines: 50
+  num_turbines: 30
   row_spacing: 7
   substation_distance: 1
   turbine_spacing: 7
@@ -47,7 +47,7 @@ project_parameters:
 #  opex_rate: 75*
   turbine_capex: 1100
   ncf: 0.5
-  opex: 129
+  opex: 65
   fcr: .058
 #scour_protection_design:
 #  cost_per_tonne: 20
@@ -66,6 +66,6 @@ towing_vessel_groups:
   num_groups: 2
   station_keeping_vessels: 1
   towing_vessels: 3
-turbine: 12MW_generic
+turbine: 20MW_generic
 #wtiv: current_wtiv
 weather: block_island.csv
