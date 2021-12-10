@@ -106,11 +106,33 @@ ORBIT_FLOATING_SITES = {
         # 2030: "site_1_2030.yaml",
         2035: "site_1_2035.yaml"
     },
+
     "Site 2": {
         2021: "site_1_2021.yaml",
         # 2025: "site_1_2025.yaml",
         # 2030: "site_1_2030.yaml",
         2035: "site_1_2035.yaml"
+    },
+
+    "Site 3": {
+        2021: "site_3_2021.yaml",
+        # 2025: "site_1_2025.yaml",
+        # 2030: "site_1_2030.yaml",
+        2035: "site_3_2035.yaml"
+    },
+
+    "Site 4": {
+        2021: "site_4_2021.yaml",
+        # 2025: "site_1_2025.yaml",
+        # 2030: "site_1_2030.yaml",
+        2035: "site_4_2035.yaml"
+    },
+
+    "Site 5": {
+        2021: "site_5_2021.yaml",
+        # 2025: "site_1_2025.yaml",
+        # 2030: "site_1_2030.yaml",
+        2035: "site_5_2035.yaml"
     },
 }
 

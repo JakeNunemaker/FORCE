@@ -46,8 +46,8 @@ port:
 project_parameters:
 #  opex_rate: 75*
   turbine_capex: 1100
-  ncf: 0.5
-  opex: 129
+  ncf: 0.53
+  opex: 250
   fcr: .058
 #scour_protection_design:
 #  cost_per_tonne: 20

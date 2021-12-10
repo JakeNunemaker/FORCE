@@ -1,6 +1,6 @@
-# Floating reference Site 1 characteristics
-# Shallow water, close to shore, high NCF, high capacity
-# 2021 technology choices:
+# Floating reference Site 2 characteristics
+# Deep water, close to shore, far from port, high NCF
+# 2035 technology choices:
 #   - 20 MW turbines
 OffshoreSubstationInstallation:
   feeder: oss_2xfeeder
@@ -46,17 +46,17 @@ port:
 project_parameters:
 #  opex_rate: 75*
   turbine_capex: 1100
-  ncf: 0.557
+  ncf: 0.578
   opex: 65
   fcr: .058
 #scour_protection_design:
 #  cost_per_tonne: 20
 #  scour_protection_depth: 1
 site:
-  depth: 832
-  distance: 55.5
-  distance_to_landfall: 42
-  mean_windspeed: 10.8
+  depth: 835
+  distance: 122.4
+  distance_to_landfall: 29.5
+  mean_windspeed: 11.6
 #spi_vessel: current_scour_protection_vessel
 substation_design:
   num_substations: 2
