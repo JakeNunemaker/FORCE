@@ -27,8 +27,14 @@ initialize_library(LIBRARY)
 
 ### Initialize Data
 ## Forecast
-FORECAST_FP = os.path.join(DIR, "data", "2021_forecast.csv")
-FORECAST = pd.read_csv(FORECAST_FP).set_index("year").to_dict()["capacity"]
+FORECAST_FP_FIXED = os.path.join(DIR, "data", "2021_fixed_forecast.csv")
+FORECAST_FIXED = pd.read_csv(FORECAST_FP_FIXED).set_index("year").to_dict()["capacity"]
+FORECAST_FP_FLOATING = os.path.join(DIR, "data", "2021_floating_forecast.csv")
+FORECAST_FLOATING = pd.read_csv(FORECAST_FP_FLOATING).set_index("year").to_dict()["capacity"]
+
+## Scaling factor for demonstration-scale floating capex
+FLOATING_DEMO_SCALE = 3
+FLOATING_CAPACITY_2021 = 72
 
 ## Regression Settings
 PROJECTS = pd.read_csv(os.path.join(DIR, "data", "2021_OWMR.csv"), header=2)
@@ -260,7 +266,12 @@ def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None, fixfloat='
             project = ProjectManager(config, weather)
             project.run()
 
-            site_data.loc[int(yr), "ORBIT"] = project.total_capex_per_kw
+            if fixfloat == 'fixed':
+                site_data.loc[int(yr), "ORBIT"] = project.total_capex_per_kw
+            else:
+                # Scale floating Capex to demo scale projects
+                site_data.loc[int(yr), "ORBIT"] = project.total_capex_per_kw * FLOATING_DEMO_SCALE
+
 
         min_yr = min(configs.keys())  # TODO: What if min_yr doesn't line up with first forecast year?
 
@@ -306,13 +317,19 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     res_x, res_y = stats_check(regression)
     b0 = regression.cumulative_capacity_fit
     bse = regression.cumulative_capacity_bse
-    upcoming_capacity = {
-        k: v - regression.installed_capacity for k, v in linear_forecast.items()
-    }
+    if fixfloat == 'fixed':
+        # Todo: Should this also be FORECAST instead of linear_forecast?
+        upcoming_capacity = {
+            k: v - regression.installed_capacity for k, v in linear_forecast.items()
+        }
+    else:
+        # Todo: Move to Regression class
+        upcoming_capacity = {
+            k: v - FLOATING_CAPACITY_2021 for k, v in FORECAST.items()
+        }
 
     # ORBIT Results
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years, fixfloat=fixfloat)
-    print(combined_outputs)
     initial_capex_range = combined_outputs.loc[2021, 'ORBIT'].values
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start =  \
@@ -399,20 +416,20 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
 if __name__ == "__main__":
 
     # Fixed bottom
-    # regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES)
+    # regression_and_plot(FORECAST_FIXED, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES)
 
     # Floating
-    float_phases = ['ArraySystemDesign',
-                    'MooringSystemDesign',
-                    'ExportSystemDesign',
-                    'SemiSubmersibleDesign',
-                    'OffshoreSubstationDesign',
-                    'ArrayCableInstallation',
-                    'ExportCableInstallation',
-                    'MooringSystemInstallation',
-                    'MooredSubInstallation',]
-    pp.pprint(ProjectManager.compile_input_dict(float_phases))
-    regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FLOAT_PREDICTORS, ORBIT_FLOATING_SITES,
+    # float_phases = ['ArraySystemDesign',
+    #                 'MooringSystemDesign',
+    #                 'ExportSystemDesign',
+    #                 'SemiSubmersibleDesign',
+    #                 'OffshoreSubstationDesign',
+    #                 'ArrayCableInstallation',
+    #                 'ExportCableInstallation',
+    #                 'MooringSystemInstallation',
+    #                 'MooredSubInstallation',]
+    # pp.pprint(ProjectManager.compile_input_dict(float_phases))
+    regression_and_plot(FORECAST_FLOATING, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FLOAT_PREDICTORS, ORBIT_FLOATING_SITES,
                         fixfloat='floating')
 
 
