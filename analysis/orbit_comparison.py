@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from ORBIT import ProjectManager, load_config
 from ORBIT.core.library import initialize_library
 from FORCE.learning import Regression
-from plot_routines import scatter_plot, plot_forecast, plot_forecast_comp
+from plot_routines import scatter_plot, plot_forecast, plot_forecast_comp, plot_deployment
 import pprint as pp
 
 
@@ -32,9 +32,14 @@ FORECAST_FIXED = pd.read_csv(FORECAST_FP_FIXED).set_index("year").to_dict()["cap
 FORECAST_FP_FLOATING = os.path.join(DIR, "data", "2021_floating_forecast.csv")
 FORECAST_FLOATING = pd.read_csv(FORECAST_FP_FLOATING).set_index("year").to_dict()["capacity"]
 
+plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
+                list(FORECAST_FLOATING.keys()), list(FORECAST_FLOATING.values()),
+                'results/deployment.png'
+                )
+
 ## Scaling factor for demonstration-scale floating capex
-FLOATING_DEMO_SCALE = 3
-FLOATING_CAPACITY_2021 = 72
+FLOATING_DEMO_SCALE = 3.03
+FLOATING_CAPACITY_2020 = 91   # Cumulative capacity as of previous year.  From OWMR.
 
 ## Regression Settings
 PROJECTS = pd.read_csv(os.path.join(DIR, "data", "2021_OWMR.csv"), header=2)
@@ -325,11 +330,12 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     else:
         # Todo: Move to Regression class
         upcoming_capacity = {
-            k: v - FLOATING_CAPACITY_2021 for k, v in FORECAST.items()
+            k: v - FLOATING_CAPACITY_2020 for k, v in FORECAST.items()
         }
 
     # ORBIT Results
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years, fixfloat=fixfloat)
+    print(upcoming_capacity, combined_outputs)
     initial_capex_range = combined_outputs.loc[2021, 'ORBIT'].values
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start =  \
@@ -416,7 +422,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
 if __name__ == "__main__":
 
     # Fixed bottom
-    # regression_and_plot(FORECAST_FIXED, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES)
+    regression_and_plot(FORECAST_FIXED, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES)
 
     # Floating
     # float_phases = ['ArraySystemDesign',
@@ -436,5 +442,5 @@ if __name__ == "__main__":
 
     # TODO:
     #   3. Plots for high/medium/low deployment projectsions
-    #   4.  Floating
+    #   4.
 

@@ -208,3 +208,23 @@ def plot_forecast_comp(fig, ax, forecast, yavg, ymin, ymax, y0, ylabel,
         myformat(ax)
         mysave(fig, fname)
         plt.close()
+
+def plot_deployment(x1, y1, x2, y2, fname=None):
+    fig, ax = initFigAxis()
+
+    ax.plot(x1,y1, color='k', label='Fixed-bottom')
+    ax.plot(x2,y2, color='k', linestyle='dashed', label='Floating')
+
+    ax.set_xlabel('Year')
+    ax.set_ylabel('Cumulative capacity, MW')
+
+    ax.set_ylim([0, 300000])
+    ax.set_xticks(np.arange(min(x1), max(x1)+1, 2))
+
+    plt.legend()
+
+    if fname:
+        myformat(ax)
+        mysave(fig, fname)
+        plt.close()
+
