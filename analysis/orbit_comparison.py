@@ -239,7 +239,7 @@ def _zip_into_years(start, stop, years):
     return {yr: val for yr, val in zip(years, np.linspace(start, stop, len(years)))}
 
 
-def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None, fixfloat='fixed'):
+def run_orbit_configs(sites, b0, upcoming, years, opex_scale, ncf_scale, initial_capex=None, fixfloat='fixed'):
     """"""
 
     orbit_outputs = []
@@ -291,8 +291,8 @@ def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None, fixfloat='
             site_data.loc[yr, "Regression"] = c * upcoming[yr] ** b0
 
         # Define Opex, NCF, FCR arrays
-        OPEX = (opex_i, opex_f)
-        NCF = (ncf_i, ncf_f)
+        OPEX = (opex_i, opex_scale * opex_f)
+        NCF = (ncf_i, ncf_scale * ncf_f)
         FCR = (fcr_i, fcr_f)
         opex = {yr: val for yr, val in zip(years, np.linspace(*OPEX, len(years)))}
         ncf = {yr: val for yr, val in zip(years, np.linspace(*NCF, len(years)))}
@@ -312,7 +312,7 @@ def run_orbit_configs(sites, b0, upcoming, years, initial_capex=None, fixfloat='
     return combined_outputs
 
 def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PREDICTORS, ORBIT_SITES,
-                        fixfloat='fixed'):
+                        fixfloat='fixed', opex_scale=1, ncf_scale=1):
     """Run all subroutines to create regression fit and all plots"""
     # Forecast
     years, linear_forecast = linearize_forecast(FORECAST)
@@ -334,8 +334,8 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         }
 
     # ORBIT Results
-    combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years, fixfloat=fixfloat)
-    print(upcoming_capacity, combined_outputs)
+    combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years,
+                                         opex_scale, ncf_scale, fixfloat=fixfloat)
     initial_capex_range = combined_outputs.loc[2021, 'ORBIT'].values
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start =  \
@@ -345,13 +345,15 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
 
     # Bounds for faster/slower learning rate
     combined_outputs_max_conservative = run_orbit_configs(ORBIT_SITES, b0 + bse, upcoming_capacity, years,
-                                                      initial_capex=avg_start + std_start,
+                                                      opex_scale, ncf_scale, initial_capex=avg_start + std_start,
                                                       fixfloat=fixfloat)
     combined_outputs_min_aggressive = run_orbit_configs(ORBIT_SITES, b0 - bse, upcoming_capacity, years,
-                                                    initial_capex=avg_start - std_start,
+                                                    opex_scale, ncf_scale, initial_capex=avg_start - std_start,
                                                     fixfloat=fixfloat)
-    combined_outputs_avg_conservative = run_orbit_configs(ORBIT_SITES, b0 + bse, upcoming_capacity, years, fixfloat=fixfloat)
-    combined_outputs_avg_aggressive = run_orbit_configs(ORBIT_SITES, b0 - bse, upcoming_capacity, years, fixfloat=fixfloat)
+    combined_outputs_avg_conservative = run_orbit_configs(ORBIT_SITES, b0 + bse, upcoming_capacity, years,
+                                                          opex_scale, ncf_scale, fixfloat=fixfloat)
+    combined_outputs_avg_aggressive = run_orbit_configs(ORBIT_SITES, b0 - bse, upcoming_capacity, years,
+                                                        opex_scale, ncf_scale, fixfloat=fixfloat)
 
     # Capex
     avg_capex = np.array(pd.pivot_table(combined_outputs.reset_index(),
@@ -368,12 +370,22 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     min_capex_aggressive = \
         np.array(pd.pivot_table(combined_outputs_min_aggressive.reset_index(),
                                 values='Regression', index='index', aggfunc=min).loc[:,'Regression'])
+    # print('Avg', avg_capex)
+    # print('Avg cons', avg_capex_conservative)
+    # print('Avg agg', avg_capex_aggressive)
+    # print('Max cons', max_capex_conservative)
+    # print('Min agg', min_capex_aggressive)
+
     # LCOE
     avg_lcoe = np.array(pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index').loc[:,'LCOE'])
     max_lcoe_conservative = np.array(pd.pivot_table(combined_outputs_max_conservative.reset_index(),
                                                     values='LCOE', index='index', aggfunc=max).loc[:,'LCOE'])
     min_lcoe_aggressive = np.array(pd.pivot_table(combined_outputs_min_aggressive.reset_index(),
                                                   values='LCOE', index='index', aggfunc=min).loc[:,'LCOE'])
+
+    # print('Avg', avg_lcoe)
+    # print('Max cons', max_lcoe_conservative)
+    # print('Min agg', min_lcoe_aggressive)
     ### Plotting
     # Forecast
     fname_capex = 'results/' + fixfloat + '_capex_forecast.png'
@@ -422,21 +434,12 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
 if __name__ == "__main__":
 
     # Fixed bottom
-    regression_and_plot(FORECAST_FIXED, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES)
+    regression_and_plot(FORECAST_FIXED, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES,
+                        opex_scale=1, ncf_scale=1)
 
     # Floating
-    # float_phases = ['ArraySystemDesign',
-    #                 'MooringSystemDesign',
-    #                 'ExportSystemDesign',
-    #                 'SemiSubmersibleDesign',
-    #                 'OffshoreSubstationDesign',
-    #                 'ArrayCableInstallation',
-    #                 'ExportCableInstallation',
-    #                 'MooringSystemInstallation',
-    #                 'MooredSubInstallation',]
-    # pp.pprint(ProjectManager.compile_input_dict(float_phases))
     regression_and_plot(FORECAST_FLOATING, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FLOAT_PREDICTORS, ORBIT_FLOATING_SITES,
-                        fixfloat='floating')
+                        fixfloat='floating', opex_scale=1, ncf_scale=1)
 
 
 

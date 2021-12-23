@@ -42,7 +42,7 @@ port:
   monthly_rate: 2000000
   num_cranes: 1
 project_parameters:
-  opex_rate: 75
+#  opex_rate: 75
   turbine_capex: 1100
   ncf: 0.476
   opex: 79.8
