@@ -386,9 +386,20 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     # print('Avg', avg_lcoe)
     # print('Max cons', max_lcoe_conservative)
     # print('Min agg', min_lcoe_aggressive)
+
+    ### Write data
+    pd.DataFrame({
+        'Year': years,
+        'Capex': avg_capex,
+        'Capex percent reductions': 1 - avg_capex / avg_capex[0],
+        'LCOE': avg_lcoe,
+        'LCOE percent reductions': 1 - avg_lcoe/ avg_lcoe[0]
+    }).to_csv('results/' + fixfloat + '_data_out.csv')
+
+
     ### Plotting
     # Forecast
-    fname_capex = 'results/' + fixfloat + '_capex_forecast.png'
+    fname_capex = 'results/' + fixfloat + '_capex_forecast_low_deploy.png'
     fig_capex, ax_capex = plot_forecast(
         upcoming_capacity,
         avg_capex,
@@ -399,7 +410,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         fname=fname_capex
     )
 
-    fname_lcoe = 'results/' + fixfloat + '_lcoe_forecast.png'
+    fname_lcoe = 'results/' + fixfloat + '_lcoe_forecast_low_deploy.png'
     plot_forecast(
         upcoming_capacity,
         avg_lcoe,
@@ -415,7 +426,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     scatter_plot(res_x, res_y, 'Fitted values (log of CapEx)', 'Residuals', fname=fname_residuals)
 
     # Sensitivities
-    fname_uncert = 'results/' + fixfloat + '_capex_forecast_uncertainty.png'
+    fname_uncert = 'results/' + fixfloat + '_capex_forecast_low_deploy_uncertainty.png'
     plot_forecast_comp(
         fig_capex,
         ax_capex,
