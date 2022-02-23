@@ -38,7 +38,7 @@ plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
                 )
 
 ## Scaling factor for demonstration-scale floating capex
-FLOATING_DEMO_SCALE = 3.03
+FLOATING_DEMO_SCALE = 1.5  # Update to match BNEF
 FLOATING_CAPACITY_2020 = 91   # Cumulative capacity as of previous year.  From OWMR.
 
 ## Regression Settings
@@ -336,6 +336,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     # ORBIT Results
     combined_outputs = run_orbit_configs(ORBIT_SITES, b0, upcoming_capacity, years,
                                          opex_scale, ncf_scale, fixfloat=fixfloat)
+    print(combined_outputs)
     initial_capex_range = combined_outputs.loc[2021, 'ORBIT'].values
     avg_start = pd.pivot_table(combined_outputs.reset_index(), values='ORBIT', index='index').iloc[0].values[0]
     std_start =  \
@@ -376,6 +377,13 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     # print('Max cons', max_capex_conservative)
     # print('Min agg', min_capex_aggressive)
 
+    # Opex, NCF, FCR
+    avg_opex = np.array(pd.pivot_table(combined_outputs.reset_index(),
+                            values='OpEx', index='index').loc[:, 'OpEx'])
+    avg_aep = np.array(pd.pivot_table(combined_outputs.reset_index(),
+                            values='AEP', index='index').loc[:, 'AEP'])
+    avg_fcr = np.array(pd.pivot_table(combined_outputs.reset_index(),
+                            values='FCR', index='index').loc[:, 'FCR'])
     # LCOE
     avg_lcoe = np.array(pd.pivot_table(combined_outputs.reset_index(), values='LCOE', index='index').loc[:,'LCOE'])
     max_lcoe_conservative = np.array(pd.pivot_table(combined_outputs_max_conservative.reset_index(),
@@ -392,6 +400,9 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         'Year': years,
         'Capex': avg_capex,
         'Capex percent reductions': 1 - avg_capex / avg_capex[0],
+        'Opex': avg_opex,
+        'AEP': avg_aep,
+        'FCR': avg_fcr,
         'LCOE': avg_lcoe,
         'LCOE percent reductions': 1 - avg_lcoe/ avg_lcoe[0]
     }).to_csv('results/' + fixfloat + '_data_out.csv')
@@ -399,7 +410,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
 
     ### Plotting
     # Forecast
-    fname_capex = 'results/' + fixfloat + '_capex_forecast_low_deploy.png'
+    fname_capex = 'results/' + fixfloat + '_capex_forecast.png'
     fig_capex, ax_capex = plot_forecast(
         upcoming_capacity,
         avg_capex,
@@ -410,7 +421,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         fname=fname_capex
     )
 
-    fname_lcoe = 'results/' + fixfloat + '_lcoe_forecast_low_deploy.png'
+    fname_lcoe = 'results/' + fixfloat + '_lcoe_forecast.png'
     plot_forecast(
         upcoming_capacity,
         avg_lcoe,
@@ -426,7 +437,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     scatter_plot(res_x, res_y, 'Fitted values (log of CapEx)', 'Residuals', fname=fname_residuals)
 
     # Sensitivities
-    fname_uncert = 'results/' + fixfloat + '_capex_forecast_low_deploy_uncertainty.png'
+    fname_uncert = 'results/' + fixfloat + '_capex_forecast_uncertainty.png'
     plot_forecast_comp(
         fig_capex,
         ax_capex,
