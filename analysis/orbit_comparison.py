@@ -38,7 +38,7 @@ plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
                 )
 
 ## Scaling factor for demonstration-scale floating capex
-FLOATING_DEMO_SCALE = 1.5  # Update to match BNEF
+FLOATING_DEMO_SCALE = 2.5    # Update to match BNEF
 FLOATING_CAPACITY_2020 = 91   # Cumulative capacity as of previous year.  From OWMR.
 
 ## Regression Settings
@@ -171,7 +171,7 @@ def run_regression(projects, filters, to_aggregate, to_drop, predictors):
         drop_country=to_drop,
         log_vars=['Cumulative Capacity', 'CAPEX_per_kw'],
     )
-    print(regression.summary)
+    # print(regression.summary)
     return regression
 
 def stats_check(regression):
@@ -382,6 +382,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
                             values='OpEx', index='index').loc[:, 'OpEx'])
     avg_aep = np.array(pd.pivot_table(combined_outputs.reset_index(),
                             values='AEP', index='index').loc[:, 'AEP'])
+    aep_min_lcoe = np.array(combined_outputs_min_aggressive[(combined_outputs_min_aggressive['Site']=='Site 1')]['AEP'])
     avg_fcr = np.array(pd.pivot_table(combined_outputs.reset_index(),
                             values='FCR', index='index').loc[:, 'FCR'])
     # LCOE
@@ -399,14 +400,17 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     pd.DataFrame({
         'Year': years,
         'Capex': avg_capex,
+        'Min capex': min_capex_aggressive,
         'Capex percent reductions': 1 - avg_capex / avg_capex[0],
         'Opex': avg_opex,
-        'AEP': avg_aep,
+        'AEP': aep_min_lcoe,
         'FCR': avg_fcr,
         'LCOE': avg_lcoe,
-        'LCOE percent reductions': 1 - avg_lcoe/ avg_lcoe[0]
+        'Min LCOE': min_lcoe_aggressive,
+        'LCOE percent reductions': 1 - avg_lcoe/ avg_lcoe[0],
     }).to_csv('results/' + fixfloat + '_data_out.csv')
 
+    combined_outputs_min_aggressive.to_csv('results/' + fixfloat + '_combined_data_out.csv')
 
     ### Plotting
     # Forecast
@@ -455,9 +459,6 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
 ### Main Script
 if __name__ == "__main__":
 
-    # Fixed bottom
-    regression_and_plot(FORECAST_FIXED, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES,
-                        opex_scale=1, ncf_scale=1)
 
     # Floating
     regression_and_plot(FORECAST_FLOATING, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FLOAT_PREDICTORS, ORBIT_FLOATING_SITES,
