@@ -27,18 +27,17 @@ initialize_library(LIBRARY)
 
 ### Initialize Data
 ## Forecast
-FORECAST_FP_FIXED = os.path.join(DIR, "data", "2021_fixed_forecast.csv")
-FORECAST_FIXED = pd.read_csv(FORECAST_FP_FIXED).set_index("year").to_dict()["capacity"]
 FORECAST_FP_FLOATING = os.path.join(DIR, "data", "2021_floating_forecast.csv")
 FORECAST_FLOATING = pd.read_csv(FORECAST_FP_FLOATING).set_index("year").to_dict()["capacity"]
+FORECAST_FLOATING_HIGH = pd.read_csv(FORECAST_FP_FLOATING).set_index("year").to_dict()["high deploy"]
 
-plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
-                list(FORECAST_FLOATING.keys()), list(FORECAST_FLOATING.values()),
+plot_deployment(list(FORECAST_FLOATING.keys()), list(FORECAST_FLOATING.values()),
+                list(FORECAST_FLOATING_HIGH.keys()), list(FORECAST_FLOATING_HIGH.values()),
                 'results/deployment.png'
                 )
 
 ## Scaling factor for demonstration-scale floating capex
-FLOATING_DEMO_SCALE = 2.5    # Update to match BNEF
+FLOATING_DEMO_SCALE = 2.6   # Update to set initial capex around $10K/KW
 FLOATING_CAPACITY_2020 = 91   # Cumulative capacity as of previous year.  From OWMR.
 
 ## Regression Settings
@@ -111,41 +110,58 @@ ORBIT_FIXED_SITES = {
 }
 
 ORBIT_FLOATING_SITES = {
+    # "Site 1": {
+    #     2021: "site_1_2021.yaml",
+    #     # 2025: "site_1_2025.yaml",
+    #     # 2030: "site_1_2030.yaml",
+    #     2035: "site_1_2035.yaml"
+    # },
+
+    # "Site 2": {
+    #     2021: "site_1_2021.yaml",
+    #     # 2025: "site_1_2025.yaml",
+    #     # 2030: "site_1_2030.yaml",
+    #     2035: "site_1_2035.yaml"
+    # },
+
+    # "Site 3": {
+    #     2021: "site_3_2021.yaml",
+    #     # 2025: "site_3_2025.yaml",
+    #     # 2030: "site_3_2030.yaml",
+    #     2035: "site_3_2035.yaml"
+    # },
+
+    # "Site 4": {
+    #     2021: "site_4_2021.yaml",
+    #     # 2025: "site_4_2025.yaml",
+    #     # 2030: "site_4_2030.yaml",
+    #     2035: "site_4_2035.yaml"
+    # },
+
+    # "Site 5": {
+    #     2021: "site_5_2021.yaml",
+    #     # 2025: "site_5_2025.yaml",
+    #     # 2030: "site_5_2030.yaml",
+    #     2035: "site_5_2035.yaml"
+    # },
+
+    # Deepwater reference site scenarios
     "Site 1": {
-        2021: "site_1_2021.yaml",
+        2021: "deepwater_site_1_2021.yaml",
         # 2025: "site_1_2025.yaml",
         # 2030: "site_1_2030.yaml",
-        2035: "site_1_2035.yaml"
+        2035: "deepwater_site_1_2035.yaml"
     },
 
     "Site 2": {
-        2021: "site_1_2021.yaml",
+        2021: "deepwater_site_1_2021.yaml",
         # 2025: "site_1_2025.yaml",
         # 2030: "site_1_2030.yaml",
-        2035: "site_1_2035.yaml"
+        2035: "deepwater_site_1_2035.yaml"
     },
 
-    "Site 3": {
-        2021: "site_3_2021.yaml",
-        # 2025: "site_1_2025.yaml",
-        # 2030: "site_1_2030.yaml",
-        2035: "site_3_2035.yaml"
-    },
-
-    "Site 4": {
-        2021: "site_4_2021.yaml",
-        # 2025: "site_1_2025.yaml",
-        # 2030: "site_1_2030.yaml",
-        2035: "site_4_2035.yaml"
-    },
-
-    "Site 5": {
-        2021: "site_5_2021.yaml",
-        # 2025: "site_1_2025.yaml",
-        # 2030: "site_1_2030.yaml",
-        2035: "site_5_2035.yaml"
-    },
 }
+
 
 ### Functions
 def run_regression(projects, filters, to_aggregate, to_drop, predictors):
@@ -466,7 +482,4 @@ if __name__ == "__main__":
 
 
 
-    # TODO:
-    #   3. Plots for high/medium/low deployment projectsions
-    #   4.
-
+ 

@@ -47,7 +47,7 @@ port:
 project_parameters:
 #  opex_rate: 75*
   turbine_capex: 1100
-  ncf: 0.474
+  ncf: 0.531
   opex: 85 # From Wiser (Median)
   fcr: .051 # From Wiser (30 year project life)
 #scour_protection_design:

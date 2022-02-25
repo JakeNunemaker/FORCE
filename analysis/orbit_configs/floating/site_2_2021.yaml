@@ -1,5 +1,5 @@
-# Floating reference Site 2 characteristics
-# Deep water, close to shore, far from port, high NCF
+# Floating reference Site 3 characteristics
+# Deep water, far shore, far from port, moderate NCF
 # 2021 technology choices:
 #   - 12 MW turbines
 OffshoreSubstationInstallation:
@@ -22,7 +22,7 @@ export_cable_install_vessel: current_export_cable_lay_vessel
 export_system_design:
   cables: XLPE_220kV_1
   percent_added_length: 0.1
-  touchdown_distance: 800
+  touchdown_distance: 600
 #feeder: current_large_feeder
 install_phases:
   ArrayCableInstallation: 0

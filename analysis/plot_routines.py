@@ -155,6 +155,7 @@ def plot_forecast(forecast, y, y1, y2, y_std, ylabel,
     x = list(forecast.values())
     # Plot
     ax1.plot(x, y, 'k-')
+    ax1.plot(x, y1, 'g--')
     ax1.fill_between(x, y1, y2, alpha=0.5)
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
@@ -212,13 +213,13 @@ def plot_forecast_comp(fig, ax, forecast, yavg, ymin, ymax, y0, ylabel,
 def plot_deployment(x1, y1, x2, y2, fname=None):
     fig, ax = initFigAxis()
 
-    ax.plot(x1,y1, color='k', label='Fixed-bottom')
-    ax.plot(x2,y2, color='k', linestyle='dashed', label='Floating')
+    ax.plot(x1,y1, color='k', label='Moderate global deployment')
+    ax.plot(x2,y2, color='k', linestyle='dashed', label='Ambitious global deployment')
 
     ax.set_xlabel('Year')
     ax.set_ylabel('Cumulative capacity, MW')
 
-    ax.set_ylim([0, 300000])
+    ax.set_ylim([0, 50000])
     ax.set_xticks(np.arange(min(x1), max(x1)+1, 2))
 
     plt.legend()
