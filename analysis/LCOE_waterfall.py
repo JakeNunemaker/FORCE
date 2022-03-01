@@ -11,7 +11,7 @@ if __name__ == '__main__':
     df = pd.read_csv('results/floating_data_out.csv')
 
     year1 = 2023
-    year2 = 2030
+    year2 = 2035
 
     def lcoe_calc(c, o, a, f):
         lcoe = 1000 * (f * c + o) / a
