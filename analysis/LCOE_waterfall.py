@@ -17,10 +17,10 @@ if __name__ == '__main__':
         lcoe = 1000 * (f * c + o) / a
         return lcoe
 
-    def delta_lcoe_calc(df, lcoe_i, capex, opex, aep, fcr, ind):  
+    def delta_lcoe_calc(df, lcoe_i, capex, opex, aep, fcr, ind):
 
         if ind == 'Min capex':
-            d_capex = df[(df['Year']==year2)]['Min capex'].to_numpy()[0] 
+            d_capex = df[(df['Year']==year2)]['Min capex'].to_numpy()[0]
             lcoe_f = lcoe_calc(d_capex, opex, aep, fcr)
             d_lcoe = lcoe_i - lcoe_f
             ind_f = d_capex
@@ -48,18 +48,20 @@ if __name__ == '__main__':
 
     delta_lcoe = {}
 
-    capex = df[(df['Year']==year1)]['Min capex'].to_numpy()[0] 
+    capex = df[(df['Year']==year1)]['Min capex'].to_numpy()[0]
     opex = df[(df['Year']==year1)]['Opex'].to_numpy()[0]
     aep = df[(df['Year']==year1)]['AEP'].to_numpy()[0]
     fcr = df[(df['Year'] == year1)]['FCR'].to_numpy()[0]
 
     lcoe_0 = lcoe_calc(capex, opex, aep, fcr)
-    
+
     delta_lcoe['Capex'], lcoe_dcapex, dcapex = delta_lcoe_calc(df, lcoe_0, capex, opex, aep, fcr, 'Min capex')
     delta_lcoe['Opex'], lcoe_dopex, dopex = delta_lcoe_calc(df, lcoe_dcapex, dcapex, opex, aep, fcr,'Opex')
     delta_lcoe['AEP'], lcoe_daep, daep = delta_lcoe_calc(df, lcoe_dopex, dcapex, dopex, aep, fcr,'AEP')
     delta_lcoe['FCR'], lcoe_dfcr, dfcr = delta_lcoe_calc(df, lcoe_daep,dcapex, dopex, daep, fcr, 'FCR')
 
+    print('initial lcoe', lcoe_0, 'initial capex', capex)
+    print('final capex',  dcapex)
     print('final lcoe', lcoe_dfcr)
 
     baseline_lcoe = df[(df['Year'] == year1)]['Min LCOE'].to_numpy()[0]
@@ -76,8 +78,8 @@ if __name__ == '__main__':
         -delta_lcoe['AEP'],
         -delta_lcoe['FCR']
     ] / (.01 * baseline_lcoe)
-    
-    
+
+
 
     waterfall_chart.plot(['Baseline \nPlant','CapEx', 'OpEx', 'Energy \nProduction', 'Lifetime \nextension'], waterfall,
         net_label=str(year2) + '\nConceptual \nPlant',
@@ -89,7 +91,7 @@ if __name__ == '__main__':
         )
 
     plt.ylim([0, 225])
-    
+
     plt.savefig('results/waterfall.png', dpi=300, bbox_inches='tight')
 
     waterfall_chart.plot(['Baseline \nPlant','CapEx', 'OpEx', 'Energy \nProduction', 'Lifetime \nextension'], waterfall_percent,
@@ -102,5 +104,5 @@ if __name__ == '__main__':
         )
 
     plt.ylim([0, 110])
-    
+
     plt.savefig('results/waterfall_percent.png', dpi=300, bbox_inches='tight')

@@ -49,6 +49,7 @@ project_parameters:
   ncf: 0.462
   opex: 243
   fcr: .058
+  # construction_financing: 0
 #scour_protection_design:
 #  cost_per_tonne: 20
 #  scour_protection_depth: 1
