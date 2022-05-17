@@ -38,7 +38,7 @@ plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
                 )
 
 ## Scaling factor for demonstration-scale floating capex
-FLOATING_DEMO_SCALE = 3.03
+FLOATING_DEMO_SCALE = 2.6     # Set initial Capex around $10K/kw
 FLOATING_CAPACITY_2020 = 91   # Cumulative capacity as of previous year.  From OWMR.
 
 ## Regression Settings
@@ -407,6 +407,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         max_capex_conservative,
         std_start,
         ylabel='Capex, $/kW',
+        fixfloat=fixfloat,
         fname=fname_capex
     )
 
@@ -418,6 +419,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         max_lcoe_conservative,
         std_lcoe_start,
         ylabel='LCOE, $/MWh',
+        fixfloat=fixfloat,
         fname=fname_lcoe
     )
 
@@ -457,4 +459,3 @@ if __name__ == "__main__":
     # TODO:
     #   3. Plots for high/medium/low deployment projectsions
     #   4.
-
