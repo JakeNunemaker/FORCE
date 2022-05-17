@@ -65,7 +65,7 @@ FIXED_PREDICTORS = [
 FLOAT_PREDICTORS = [
             'Country Name',
             'Water Depth Max (m)',
-            # 'Turbine MW (Max)',
+            'Turbine MW (Max)',
             # 'Capacity MW (Max)',
             'Distance From Shore Auto (km)',
             ]
@@ -479,7 +479,3 @@ if __name__ == "__main__":
     # Floating
     regression_and_plot(FORECAST_FLOATING, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FLOAT_PREDICTORS, ORBIT_FLOATING_SITES,
                         fixfloat='floating', opex_scale=1, ncf_scale=1)
-
-
-
- 
