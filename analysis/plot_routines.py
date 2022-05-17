@@ -161,8 +161,11 @@ def plot_forecast(forecast, y, y1, y2, y_std, ylabel,
     ax1.set_ylabel(ylabel)
 
     ax2.set_xlim(ax1.get_xlim())
-    ax2.set_xticks(x)
-    ax2.set_xticklabels(forecast.keys(), rotation=45, fontsize=8)
+    float_ind = [0,5,7] + list(range(9,len(x)+1))
+    _values = [k for i,k in enumerate(forecast.values()) if i in float_ind]
+    _labels = [k for i,k in enumerate(forecast.keys()) if i in float_ind]
+    ax2.set_xticks(_values)
+    ax2.set_xticklabels(_labels, rotation=45, fontsize=8)
 
     if fname:
         myformat([ax1, ax2])
@@ -228,4 +231,3 @@ def plot_deployment(x1, y1, x2, y2, fname=None):
         myformat(ax)
         mysave(fig, fname)
         plt.close()
-
