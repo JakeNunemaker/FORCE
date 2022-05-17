@@ -65,7 +65,7 @@ FIXED_PREDICTORS = [
 FLOAT_PREDICTORS = [
             'Country Name',
             'Water Depth Max (m)',
-            'Turbine MW (Max)',
+            # 'Turbine MW (Max)',
             # 'Capacity MW (Max)',
             'Distance From Shore Auto (km)',
             ]
@@ -423,6 +423,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         'FCR': avg_fcr,
         'LCOE': avg_lcoe,
         'Min LCOE': min_lcoe_aggressive,
+        'Max LCOE': max_lcoe_conservative,
         'LCOE percent reductions': 1 - avg_lcoe/ avg_lcoe[0],
     }).to_csv('results/' + fixfloat + '_data_out.csv')
 
