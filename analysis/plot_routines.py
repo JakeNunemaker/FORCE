@@ -8,6 +8,7 @@ __status__ = "Development"
 import numpy as np
 import pandas as pd
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.text as txt
 import os
@@ -158,6 +159,10 @@ def plot_forecast(forecast, y, y1, y2, y_std, ylabel, fixfloat,
     ax1.fill_between(x, y1, y2, alpha=0.5)
     ax1.set_xlabel(xlabel)
     ax1.set_ylabel(ylabel)
+    ax1.get_xaxis().set_major_formatter(
+            mpl.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+    ax1.get_yaxis().set_major_formatter(
+            mpl.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
     ax2.set_xlim(ax1.get_xlim())
     if fixfloat == 'fixed':
@@ -228,6 +233,11 @@ def plot_deployment(x1, y1, x2, y2, fname=None):
 
     ax.set_ylim([0, 300000])
     ax.set_xticks(np.arange(min(x1), max(x1)+1, 2))
+
+    ax.get_xaxis().set_major_formatter(
+            mpl.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
+    ax.get_yaxis().set_major_formatter(
+            mpl.ticker.FuncFormatter(lambda x, p: format(int(x), ',')))
 
     plt.legend()
 

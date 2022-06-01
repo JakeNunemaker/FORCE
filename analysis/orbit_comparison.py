@@ -26,11 +26,38 @@ initialize_library(LIBRARY)
 
 
 ### Initialize Data
+scenario = 'high cost'
+if scenario == 'baseline':
+    capacity = 'capacity'
+    opex_scale = 1
+    ncf_scale = 1
+    fig_label = 'baseline_deploy'
+elif scenario == 'high':
+    capacity = 'high capacity'
+    opex_scale = 1
+    ncf_scale = 1
+    fig_label = 'high_deploy'
+elif scenario == 'low':
+    capacity = 'low capacity'
+    opex_scale = 1
+    ncf_scale = 1
+    fig_label = 'low_deploy'
+elif scenario == 'low cost':
+    capacity = 'capacity'
+    fig_label = 'low_cost'
+    opex_scale = 0.9
+    ncf_scale = 1.05
+elif scenario == 'high cost':
+    capacity = 'capacity'
+    fig_label = 'high_cost'
+    opex_scale = 1.1
+    ncf_scale = 0.95
+
 ## Forecast
 FORECAST_FP_FIXED = os.path.join(DIR, "data", "2021_fixed_forecast.csv")
-FORECAST_FIXED = pd.read_csv(FORECAST_FP_FIXED).set_index("year").to_dict()["capacity"]
+FORECAST_FIXED = pd.read_csv(FORECAST_FP_FIXED).set_index("year").to_dict()[capacity]
 FORECAST_FP_FLOATING = os.path.join(DIR, "data", "2021_floating_forecast.csv")
-FORECAST_FLOATING = pd.read_csv(FORECAST_FP_FLOATING).set_index("year").to_dict()["capacity"]
+FORECAST_FLOATING = pd.read_csv(FORECAST_FP_FLOATING).set_index("year").to_dict()[capacity]
 
 plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
                 list(FORECAST_FLOATING.keys()), list(FORECAST_FLOATING.values()),
@@ -38,7 +65,7 @@ plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
                 )
 
 ## Scaling factor for demonstration-scale floating capex
-FLOATING_DEMO_SCALE = 2.6     # Set initial Capex around $10K/kw
+FLOATING_DEMO_SCALE = 2.5     # Set initial Capex around $10K/kw
 FLOATING_CAPACITY_2020 = 91   # Cumulative capacity as of previous year.  From OWMR.
 
 ## Regression Settings
@@ -391,27 +418,33 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     pd.DataFrame({
         'Year': years,
         'Capex': avg_capex,
+        'Capex (average start and conservative LR)': avg_capex_conservative,
+        'Capex (average start and aggressive LR)': avg_capex_aggressive,
+        'Capex (max start and conservative LR)': max_capex_conservative,
+        'Capex (min start and aggressive LR)': min_capex_aggressive,
         'Capex percent reductions': 1 - avg_capex / avg_capex[0],
         'LCOE': avg_lcoe,
+        'LCOE (max start and conservative LR)': max_lcoe_conservative,
+        'LCOE (min start and aggressive LR)': min_lcoe_aggressive,
         'LCOE percent reductions': 1 - avg_lcoe/ avg_lcoe[0]
-    }).to_csv('results/' + fixfloat + '_data_out.csv')
+    }).to_csv('results/' + fixfloat + '_' + fig_label + '_data_out.csv')
 
 
     ### Plotting
     # Forecast
-    fname_capex = 'results/' + fixfloat + '_capex_forecast_low_deploy.png'
+    fname_capex = 'results/' + fixfloat + '_capex_forecast_' + fig_label + '.png'
     fig_capex, ax_capex = plot_forecast(
         upcoming_capacity,
         avg_capex,
         min_capex_aggressive,
         max_capex_conservative,
         std_start,
-        ylabel='Capex, $/kW',
+        ylabel='CapEx, $/kW',
         fixfloat=fixfloat,
         fname=fname_capex
     )
 
-    fname_lcoe = 'results/' + fixfloat + '_lcoe_forecast_low_deploy.png'
+    fname_lcoe = 'results/' + fixfloat + '_lcoe_forecast_' + fig_label + '.png'
     plot_forecast(
         upcoming_capacity,
         avg_lcoe,
@@ -428,7 +461,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     scatter_plot(res_x, res_y, 'Fitted values (log of CapEx)', 'Residuals', fname=fname_residuals)
 
     # Sensitivities
-    fname_uncert = 'results/' + fixfloat + '_capex_forecast_low_deploy_uncertainty.png'
+    fname_uncert = 'results/' + fixfloat + '_capex_forecast' + fig_label + '_uncertainty.png'
     plot_forecast_comp(
         fig_capex,
         ax_capex,
@@ -437,7 +470,7 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         avg_capex_aggressive,
         avg_capex_conservative,
         initial_capex_range,
-        ylabel='Capex, $/kW',
+        ylabel='CapEx, $/kW',
         fname=fname_uncert
     )
 
@@ -448,14 +481,8 @@ if __name__ == "__main__":
 
     # Fixed bottom
     regression_and_plot(FORECAST_FIXED, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES,
-                        opex_scale=1, ncf_scale=1)
+                        opex_scale=opex_scale, ncf_scale=ncf_scale)
 
     # Floating
     regression_and_plot(FORECAST_FLOATING, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FLOAT_PREDICTORS, ORBIT_FLOATING_SITES,
-                        fixfloat='floating', opex_scale=1, ncf_scale=1)
-
-
-
-    # TODO:
-    #   3. Plots for high/medium/low deployment projectsions
-    #   4.
+                        fixfloat='floating', opex_scale=opex_scale, ncf_scale=ncf_scale)
