@@ -407,7 +407,6 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         max_capex_conservative,
         std_start,
         ylabel='Capex, $/kW',
-        fixfloat=fixfloat,
         fname=fname_capex
     )
 
@@ -419,7 +418,6 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
         max_lcoe_conservative,
         std_lcoe_start,
         ylabel='LCOE, $/MWh',
-        fixfloat=fixfloat,
         fname=fname_lcoe
     )
 
@@ -445,10 +443,6 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
 
 ### Main Script
 if __name__ == "__main__":
-
-    # Fixed bottom
-    regression_and_plot(FORECAST_FIXED, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FIXED_PREDICTORS, ORBIT_FIXED_SITES,
-                        opex_scale=1, ncf_scale=1)
 
     # Floating
     regression_and_plot(FORECAST_FLOATING, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, FLOAT_PREDICTORS, ORBIT_FLOATING_SITES,
