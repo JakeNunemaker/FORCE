@@ -38,7 +38,7 @@ plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
                 )
 
 ## Scaling factor for demonstration-scale floating capex
-FLOATING_DEMO_SCALE = 2.6     # Set initial Capex around $10K/kw
+FLOATING_DEMO_SCALE = 2.5368     # Set initial Capex around $10K/kw.  =2.6
 FLOATING_CAPACITY_2020 = 91   # Cumulative capacity as of previous year.  From OWMR.
 
 ## Regression Settings
@@ -399,8 +399,8 @@ def regression_and_plot(FORECAST, PROJECTS, FILTERS, TO_AGGREGATE, TO_DROP, PRED
     ### Write data
     pd.DataFrame({
         'Year': years,
-        'Capex': avg_capex,
-        'Min capex': min_capex_aggressive,
+        'Min capex': avg_capex,  # Select average trajectory for BAU scenario
+        # 'Min capex': min_capex_aggressive,
         'Capex percent reductions': 1 - avg_capex / avg_capex[0],
         'Opex': avg_opex,
         'AEP': aep_min_aep,

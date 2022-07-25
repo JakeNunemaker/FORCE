@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     df = pd.read_csv('results/floating_data_out.csv')
 
-    year1 = 2023
+    year1 = 2024
     year2 = 2035
 
     def lcoe_calc(c, o, a, f):
@@ -63,8 +63,11 @@ if __name__ == '__main__':
     print('initial lcoe', lcoe_0, 'initial capex', capex)
     print('final capex',  dcapex)
     print('final lcoe', lcoe_dfcr)
+    print(lcoe_dcapex, lcoe_dopex, lcoe_daep, lcoe_dfcr)
 
     baseline_lcoe = df[(df['Year'] == year1)]['Min LCOE'].to_numpy()[0]
+    # print(baseline_lcoe)
+    baseline_lcoe = lcoe_0
     waterfall = [baseline_lcoe,
         -delta_lcoe['Capex'],
         -delta_lcoe['Opex'],

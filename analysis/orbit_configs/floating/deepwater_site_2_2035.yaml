@@ -46,8 +46,8 @@ port:
 project_parameters:
 #  opex_rate: 75*
   turbine_capex: 1100
-  ncf: 0.65
-  opex: 85 # From Wiser
+  ncf: 0.5
+  opex: 100 # From Wiser
   fcr: .051 # From Wiser (30 year project life)
   # construction_financing: 0  # Overnight capital csots remove financing
 #scour_protection_design:
