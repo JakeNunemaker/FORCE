@@ -30,7 +30,7 @@ initialize_library(LIBRARY)
 FORECAST_FP_FIXED = os.path.join(DIR, "data", "2021_fixed_forecast.csv")
 FORECAST_FIXED = pd.read_csv(FORECAST_FP_FIXED).set_index("year").to_dict()["capacity"]
 FORECAST_FP_FLOATING = os.path.join(DIR, "data", "2021_floating_forecast.csv")
-FORECAST_FLOATING = pd.read_csv(FORECAST_FP_FLOATING).set_index("year").to_dict()["capacity"]
+FORECAST_FLOATING = pd.read_csv(FORECAST_FP_FLOATING).set_index("year").to_dict()["low capacity BAU"]
 
 plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
                 list(FORECAST_FLOATING.keys()), list(FORECAST_FLOATING.values()),
@@ -38,7 +38,7 @@ plot_deployment(list(FORECAST_FIXED.keys()), list(FORECAST_FIXED.values()),
                 )
 
 ## Scaling factor for demonstration-scale floating capex
-FLOATING_DEMO_SCALE = 2.5368     # Set initial Capex around $10K/kw.  =2.6
+FLOATING_DEMO_SCALE = 2.45     # Set initial Capex around $10K/kw.  =2.6
 FLOATING_CAPACITY_2020 = 91   # Cumulative capacity as of previous year.  From OWMR.
 
 ## Regression Settings
